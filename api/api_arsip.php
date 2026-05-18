@@ -24,8 +24,8 @@ $limit = 10;
 $halaman = isset($_GET['hal']) ? (int)$_GET['hal'] : 1;
 $offset = ($halaman - 1) * $limit;
 
-// Syarat data masuk arsip
-$query_syarat = "FROM meetings WHERE user_id = '$my_id' AND (is_finished = 1 OR STR_TO_DATE(CONCAT(meeting_date, ' ', end_time), '%Y-%m-%d %H:%i:%s') < NOW())";
+// Syarat data masuk arsip (DIPERBAIKI KHUSUS POSTGRESQL)
+$query_syarat = "FROM meetings WHERE user_id = '$my_id' AND (is_finished = 1 OR TO_TIMESTAMP(meeting_date || ' ' || end_time, 'YYYY-MM-DD HH24:MI:SS') < NOW())";
 
 // Cek apakah ini minta data buat nge-print semua?
 $is_print_mode = isset($_GET['print']) && $_GET['print'] == 'semua';
@@ -36,8 +36,8 @@ if ($is_print_mode) {
     $total_halaman = 1;
 } else {
     // Kalau normal, hitung total halaman dulu
-    $sql_total = mysqli_query($conn, "SELECT COUNT(*) as total $query_syarat");
-    $row_total = mysqli_fetch_assoc($sql_total);
+    $sql_total = pg_query($conn, "SELECT COUNT(*) as total $query_syarat");
+    $row_total = pg_fetch_assoc($sql_total);
     $total_data = $row_total['total'];
     $total_halaman = ceil($total_data / $limit);
 
@@ -45,10 +45,10 @@ if ($is_print_mode) {
     $sql = "SELECT * $query_syarat ORDER BY meeting_date DESC, end_time DESC LIMIT $limit OFFSET $offset";
 }
 
-$result = mysqli_query($conn, $sql);
+$result = pg_query($conn, $sql);
 $data_arsip = [];
 
-while ($row = mysqli_fetch_assoc($result)) {
+while ($row = pg_fetch_assoc($result)) {
     // Format tanggal biar gampang dibaca Javascript nanti
     $row['tanggal_format'] = date('d/m/Y', strtotime($row['meeting_date']));
     $row['jam_format'] = substr($row['start_time'], 0, 5) . ' - ' . substr($row['end_time'], 0, 5);
