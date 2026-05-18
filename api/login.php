@@ -7,9 +7,9 @@ if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && is
     $no_induk_cookie = $_COOKIE['ingat_nomor_induk'];
     $token_cookie = $_COOKIE['token_aman'];
 
-    $query_cek = mysqli_query($conn, "SELECT * FROM users WHERE nomor_induk='$no_induk_cookie'");
-    if (mysqli_num_rows($query_cek) === 1) {
-        $data_cookie = mysqli_fetch_assoc($query_cek);
+    $query_cek = pg_query($conn, "SELECT * FROM users WHERE nomor_induk='$no_induk_cookie'");
+    if (pg_num_rows($query_cek) === 1) {
+        $data_cookie = pg_fetch_assoc($query_cek);
         
         if ($token_cookie === hash('sha256', $data_cookie['nomor_induk'])) {
             $_SESSION['logged_in'] = true;
@@ -35,12 +35,12 @@ $remembered_no_induk = $_COOKIE['ingat_nomor_induk'] ?? '';
 
 $error = "";
 if (isset($_POST['login'])) {
-    $no_induk = mysqli_real_escape_string($conn, $_POST['nomor_induk']);
+    $no_induk = pg_escape_string($conn, $_POST['nomor_induk']);
     $pass = $_POST['password'];
 
-    $query = mysqli_query($conn, "SELECT * FROM users WHERE nomor_induk='$no_induk'");
-    if (mysqli_num_rows($query) === 1) {
-        $data = mysqli_fetch_assoc($query);
+    $query = pg_query($conn, "SELECT * FROM users WHERE nomor_induk='$no_induk'");
+    if (pg_num_rows($query) === 1) {
+        $data = pg_fetch_assoc($query);
         
         if (password_verify($pass, $data['password'])) {
             $_SESSION['logged_in'] = true;
