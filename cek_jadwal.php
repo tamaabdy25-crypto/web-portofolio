@@ -50,7 +50,8 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
             transition: background-color 0.5s ease; display: inline-block; vertical-align: middle;
         }
 
-.sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); z-index: 100; padding: 20px 0; border-bottom: 2px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }        .card { border: none; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); background: rgba(255, 255, 255, 0.95) !important; }
+        .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); z-index: 100; padding: 20px 0; border-bottom: 2px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }        
+        .card { border: none; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); background: rgba(255, 255, 255, 0.95) !important; }
         .btn-outline-info { color: #0ea5e9; border-color: #0ea5e9; }
         .btn-outline-info:hover { background-color: #0ea5e9; color: white; }
         
@@ -207,13 +208,18 @@ function loadJadwalIntip(hal = 1) {
                 let safeTitle = row.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 let safePengusul = row.nama_pengusul.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
+                // 💡 JURUS SAPU JAGAT ANTI-UNDEFINED
+                // Cek apakah API ngirim `start_time` atau `jam_mulai`. Kalau dua-duanya ga ada, isi '00:00'.
+                let waktuMulai = row.start_time || row.jam_mulai || '00:00';
+                let waktuSelesai = row.end_time || row.jam_selesai || '00:00';
+
                 htmlTabel += `
                     <tr>
                         <td class="px-3 fw-bold text-dark">${row.tanggal_format}</td>
                         <td class="px-3 text-success fw-bold" style="color: var(--theme-primary) !important;">
-                        <i class="bi bi-play-circle-fill me-1" style="font-size: 0.8rem;"></i>${row.start_time ? row.start_time.substring(0, 5) : '00:00'} 
-                        <span class="text-muted mx-1">-</span> 
-                        <i class="bi bi-stop-circle-fill me-1" style="font-size: 0.8rem;"></i>${row.end_time ? row.end_time.substring(0, 5) : '00:00'}
+                            <i class="bi bi-play-circle-fill me-1" style="font-size: 0.8rem;"></i>${waktuMulai.substring(0, 5)} 
+                            <span class="text-muted mx-1">-</span> 
+                            <i class="bi bi-stop-circle-fill me-1" style="font-size: 0.8rem;"></i>${waktuSelesai.substring(0, 5)}
                         </td>
                         <td class="px-3"><span class="badge-ruang">${row.room_name}</span></td>
                         <td class="px-3 fw-semibold text-dark">${safeTitle}</td>
