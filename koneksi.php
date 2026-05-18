@@ -4,10 +4,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db   = "meeting1";
+$host = "sql113.infinityfree.com";
+$user = "if0_41783112";
+$pass = "CsJT9eYwL5";
+$db   = "if0_41783112_evision";
 
 // Membuat koneksi ke database
 $conn = mysqli_connect($host, $user, $pass, $db);
