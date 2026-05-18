@@ -7,10 +7,10 @@ $my_id = $_SESSION['user_id'];
 
 // --- LOGIKA RESET ---
 if (isset($_POST['reset_theme'])) {
-    $cek = mysqli_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
-    $d = mysqli_fetch_assoc($cek);
+    $cek = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
+    $d = pg_fetch_assoc($cek);
     if (!empty($d['theme_wallpaper']) && file_exists($d['theme_wallpaper'])) { unlink($d['theme_wallpaper']); }
-    mysqli_query($conn, "UPDATE users SET theme_wallpaper = NULL WHERE id = '$my_id'");
+    pg_query($conn, "UPDATE users SET theme_wallpaper = NULL WHERE id = '$my_id'");
     header("Location: input.php?status=reset_sukses");
     exit();
 }
@@ -28,8 +28,8 @@ if (isset($_POST['set_theme'])) {
         if (!is_dir('uploads')) { mkdir('uploads', 0777, true); }
 
         // --- TAMBAHAN: HAPUS FILE LAMA DARI FOLDER SEBELUM SIMPAN YANG BARU ---
-        $cek_lama = mysqli_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
-        $data_lama = mysqli_fetch_assoc($cek_lama);
+        $cek_lama = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
+        $data_lama = pg_fetch_assoc($cek_lama);
         if (!empty($data_lama['theme_wallpaper']) && file_exists($data_lama['theme_wallpaper'])) {
             unlink($data_lama['theme_wallpaper']); 
         }
@@ -39,10 +39,10 @@ if (isset($_POST['set_theme'])) {
         $target_dir = "uploads/" . $nama_unik;
 
         if (move_uploaded_file($file_tmp, $target_dir)) {
-            mysqli_query($conn, "UPDATE users SET theme_wallpaper = '$target_dir' WHERE id = '$my_id'");
+            pg_query($conn, "UPDATE users SET theme_wallpaper = '$target_dir' WHERE id = '$my_id'");
             header("Location: input.php?status=tema_sukses");
         } else {
-            echo "Gagal! XAMPP kamu masih mencekal file besar. Cek php.ini (upload_max_filesize).";
+            echo "Gagal! Vercel/Server kamu masih mencekal file besar.";
         }
     } else {
         echo "Format file harus gambar (JPG/PNG/WEBP)!";
