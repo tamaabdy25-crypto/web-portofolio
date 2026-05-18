@@ -4,18 +4,18 @@ include 'koneksi.php';
 $alert_status = "";
 
 if (isset($_POST['reset_pw'])) {
-    $no_induk = mysqli_real_escape_string($conn, $_POST['nomor_induk']);
+    $no_induk = pg_escape_string($conn, $_POST['nomor_induk']);
     $pw_baru  = $_POST['password'];
 
     // 1. Cek apakah Nomor Induk terdaftar
-    $cek_user = mysqli_query($conn, "SELECT * FROM users WHERE nomor_induk = '$no_induk'");
+    $cek_user = pg_query($conn, "SELECT * FROM users WHERE nomor_induk = '$no_induk'");
     
-    if (mysqli_num_rows($cek_user) > 0) {
+    if (pg_num_rows($cek_user) > 0) {
         // 2. Hash password baru (6 digit)
         $hashed_pw = password_hash($pw_baru, PASSWORD_DEFAULT);
         
         // 3. Update ke database
-        $update = mysqli_query($conn, "UPDATE users SET password = '$hashed_pw' WHERE nomor_induk = '$no_induk'");
+        $update = pg_query($conn, "UPDATE users SET password = '$hashed_pw' WHERE nomor_induk = '$no_induk'");
         
         if ($update) {
             $alert_status = "sukses";
