@@ -7,11 +7,11 @@ include 'koneksi.php';
 
 // 1. SET ZONE & LOGIKA AUTO-ARCHIVE (Memaksa selesai jika jam sudah lewat)
 date_default_timezone_set('Asia/Jakarta');
-mysqli_query($conn, "SET time_zone = '+07:00'");
-mysqli_query($conn, "UPDATE meetings 
+pg_query($conn, "SET TIME ZONE 'Asia/Jakarta'");
+pg_query($conn, "UPDATE meetings 
     SET is_finished = 1 
     WHERE is_finished = 0 
-    AND STR_TO_DATE(CONCAT(meeting_date, ' ', end_time), '%Y-%m-%d %H:%i:%s') <= NOW()");
+    AND TO_TIMESTAMP(meeting_date || ' ' || end_time, 'YYYY-MM-DD HH24:MI:SS') <= NOW()");
 
 // Cek Keamanan
 $my_id = $_SESSION['user_id'] ?? 0;
@@ -22,13 +22,13 @@ if (!$my_id) {
 
 // 2. AMBIL DATA JADWAL LIVE MILIK USER
 $sql = "SELECT * FROM meetings WHERE user_id = '$my_id' AND is_finished = 0 ORDER BY meeting_date ASC, start_time ASC";
-$res = mysqli_query($conn, $sql);
+$res = pg_query($conn, $sql);
 
 $data_live = [];
 $nowWIB = time();
 $bulan_indo = ['01'=>'Januari','02'=>'Februari','03'=>'Maret','04'=>'April','05'=>'Mei','06'=>'Juni','07'=>'Juli','08'=>'Agustus','09'=>'September','10'=>'Oktober','11'=>'November','12'=>'Desember'];
 
-while ($row = mysqli_fetch_assoc($res)) {
+while ($row = pg_fetch_assoc($res)) {
     $startWIB = strtotime($row['meeting_date'] . ' ' . $row['start_time']);
     $endWIB   = strtotime($row['meeting_date'] . ' ' . $row['end_time']);
     
