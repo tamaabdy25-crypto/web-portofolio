@@ -23,13 +23,13 @@ $sql = "SELECT * FROM meetings
         AND meeting_date <= '$tgl_selesai' 
         ORDER BY meeting_date ASC, start_time ASC";
         
-$res = mysqli_query($conn, $sql);
+$res = pg_query($conn, $sql);
 $data_jadwal = [];
 
 $bulan_indo = ['01'=>'Jan','02'=>'Feb','03'=>'Mar','04'=>'Apr','05'=>'Mei','06'=>'Jun','07'=>'Jul','08'=>'Agt','09'=>'Sep','10'=>'Okt','11'=>'Nov','12'=>'Des'];
 
 // 3. RAPIKAN FORMAT DATA
-while ($row = mysqli_fetch_assoc($res)) {
+while ($row = pg_fetch_assoc($res)) {
     $tgl_parts = explode('-', $row['meeting_date']);
     $row['tanggal_format'] = $tgl_parts[2] . ' ' . $bulan_indo[$tgl_parts[1]] . ' ' . $tgl_parts[0];
     $row['jam_format'] = substr($row['start_time'], 0, 5) . ' - ' . substr($row['end_time'], 0, 5) . ' WIB';
