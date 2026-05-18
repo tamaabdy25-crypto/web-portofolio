@@ -7,11 +7,11 @@ header("Content-Type: application/json; charset=UTF-8"); // Ngasih tau format ou
 // 2. KONEKSI KE DATABASE (Dapur)
 include 'koneksi.php';
 
-// 3. AMBIL DATA DARI MYSQL
-$query_kalender = mysqli_query($conn, "SELECT * FROM meetings ORDER BY meeting_date ASC, start_time ASC");
+// 3. AMBIL DATA DARI POSTGRESQL (Supabase)
+$query_kalender = pg_query($conn, "SELECT * FROM meetings ORDER BY meeting_date ASC, start_time ASC");
 $events = [];
 
-while($row = mysqli_fetch_assoc($query_kalender)) {
+while($row = pg_fetch_assoc($query_kalender)) {
     // Format tanggal khusus buat kalender
     $start_dt = $row['meeting_date'] . 'T' . $row['start_time'];
     $end_dt = $row['meeting_date'] . 'T' . $row['end_time'];
