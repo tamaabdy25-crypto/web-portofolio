@@ -12,8 +12,8 @@ $user_id = $_SESSION['user_id'];
 $success_msg = "";
 $error_msg = "";
 
-$query_user = mysqli_query($conn, "SELECT * FROM users WHERE id = '$user_id'");
-$user = mysqli_fetch_assoc($query_user);
+$query_user = pg_query($conn, "SELECT * FROM users WHERE id = '$user_id'");
+$user = pg_fetch_assoc($query_user);
 
 // ==============================================================
 // 💡 BLOK BARU: AKSI UBAH PASSWORD (SISTEM AJAX ANTI-LOADING)
@@ -35,7 +35,7 @@ if (isset($_POST['update_password_ajax'])) {
         echo json_encode(["status" => "error", "pesan" => "Konfirmasi password tidak cocok!"]);
     } else {
         $hashed_baru = password_hash($pw_baru, PASSWORD_DEFAULT);
-        mysqli_query($conn, "UPDATE users SET password = '$hashed_baru' WHERE id = '$user_id'");
+        pg_query($conn, "UPDATE users SET password = '$hashed_baru' WHERE id = '$user_id'");
         echo json_encode(["status" => "success", "pesan" => "Password berhasil diperbarui!"]);
     }
     exit; // Stop render HTML, cukup kirim JSON ke Javascript
@@ -88,7 +88,7 @@ if (isset($_POST['aksi_foto'])) {
             
             // Pindahkan file baru
             if (move_uploaded_file($file_tmp, $target_file)) {
-                mysqli_query($conn, "UPDATE users SET foto_profil = '$target_file' WHERE id = '$user_id'");
+                pg_query($conn, "UPDATE users SET foto_profil = '$target_file' WHERE id = '$user_id'");
                 $user_foto = $target_file; // Update variabel untuk tampilan
                 $success_msg = "Foto profil berhasil diperbarui!";
             } else {
@@ -101,8 +101,8 @@ if (isset($_POST['aksi_foto'])) {
         if (!empty($user_foto) && file_exists($user_foto)) {
             unlink($user_foto);
         }
-        // Bersihkan data di tabel MySQL
-        mysqli_query($conn, "UPDATE users SET foto_profil = NULL WHERE id = '$user_id'");
+        // Bersihkan data di tabel PostgreSQL
+        pg_query($conn, "UPDATE users SET foto_profil = NULL WHERE id = '$user_id'");
         $user_foto = "";
         $success_msg = "Foto profil berhasil dihapus!";
     }
@@ -248,8 +248,8 @@ if (isset($_POST['aksi_foto'])) {
         }
 
         /* =======================================================
-           ANIMASI SHAKE BUAT UPLOAD FOTO & GANTI PASSWORD
-           ======================================================= */
+            ANIMASI SHAKE BUAT UPLOAD FOTO & GANTI PASSWORD
+            ======================================================= */
         @keyframes shakeError {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-5px); }
