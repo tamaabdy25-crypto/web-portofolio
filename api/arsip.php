@@ -5,14 +5,15 @@ if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
 
 $my_id = $_SESSION['user_id'];
 
-// Otomatis tambah kolom jika belum ada
-$check_col = mysqli_query($conn, "SHOW COLUMNS FROM meetings LIKE 'notulensi'");
-if(mysqli_num_rows($check_col) == 0) {
-    mysqli_query($conn, "ALTER TABLE meetings ADD notulensi TEXT NULL AFTER is_finished, ADD daftar_hadir TEXT NULL AFTER notulensi, ADD link_lampiran VARCHAR(255) NULL AFTER daftar_hadir");
+// Otomatis tambah kolom jika belum ada (DIPERBAIKI KHUSUS POSTGRESQL)
+$check_col = pg_query($conn, "SELECT column_name FROM information_schema.columns WHERE table_name='meetings' AND column_name='notulensi'");
+if(pg_num_rows($check_col) == 0) {
+    // PostgreSQL tidak support 'AFTER', jadi kolom otomatis ditambah di urutan paling belakang (Aman kok!)
+    pg_query($conn, "ALTER TABLE meetings ADD COLUMN notulensi TEXT NULL, ADD COLUMN daftar_hadir TEXT NULL, ADD COLUMN link_lampiran VARCHAR(255) NULL");
 }
 
-$q_theme = mysqli_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
-$data_theme = mysqli_fetch_assoc($q_theme);
+$q_theme = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
+$data_theme = pg_fetch_assoc($q_theme);
 $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 
 // SEMUA LOGIKA SIMPAN & HAPUS SUDAH PINDAH KE api_action.php
@@ -254,7 +255,6 @@ function loadArsip(hal = 1, isPrint = false) {
                         </td>
                         <td class="px-3 text-center table-aksi">
                             <div class="d-flex justify-content-center">
-                                <!-- HANYA MENGIRIM ID KE FUNGSI bukaNotulensi -->
                                 <button type="button" onclick="bukaNotulensi('${row.id}')" class="btn btn-light p-2 shadow-sm border me-2" style="border-radius: 10px; color: var(--theme-primary);" title="Detail & Notulensi"><i class="bi bi-file-earmark-text-fill"></i></button>
                                 <button onclick="konfirmasiHapusArsip(${row.id})" class="btn btn-light text-danger p-2 shadow-sm border" style="border-radius: 10px;" title="Hapus Arsip"><i class="bi bi-trash3-fill"></i></button>
                             </div>
