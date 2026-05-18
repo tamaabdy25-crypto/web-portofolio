@@ -11,8 +11,8 @@ $error_msg = "";
 $hari_ini = date('Y-m-d');
 
 if (isset($_POST['register'])) {
-    $no_induk = mysqli_real_escape_string($conn, $_POST['nomor_induk']);
-    $nama     = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
+    $no_induk = pg_escape_string($conn, $_POST['nomor_induk']);
+    $nama     = pg_escape_string($conn, $_POST['nama_lengkap']);
     $pass     = $_POST['password'];
     $role     = $_POST['role']; // Ambil pilihan role dari form
 
@@ -21,8 +21,8 @@ if (isset($_POST['register'])) {
         $error_msg = "Password minimal 6 karakter!";
     } else {
         // 2. Cek apakah No Induk sudah terdaftar
-        $cek = mysqli_query($conn, "SELECT id FROM users WHERE no_induk='$no_induk'");
-        if (mysqli_num_rows($cek) > 0) {
+        $cek = pg_query($conn, "SELECT id FROM users WHERE no_induk='$no_induk'");
+        if (pg_num_rows($cek) > 0) {
             $error_msg = "Nomor Induk ini sudah terdaftar!";
         } else {
             // 3. Hash password sebelum disimpan
@@ -32,10 +32,10 @@ if (isset($_POST['register'])) {
             $sql = "INSERT INTO users (no_induk, nama_lengkap, password, role) 
                     VALUES ('$no_induk', '$nama', '$hashed_pw', '$role')";            
             
-            if (mysqli_query($conn, $sql)) {
+            if (pg_query($conn, $sql)) {
                 $success = true;
             } else {
-                $error_msg = "Gagal simpan: " . mysqli_error($conn);
+                $error_msg = "Gagal simpan: " . pg_last_error($conn);
             }
         }
     }
