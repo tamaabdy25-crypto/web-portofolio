@@ -1,21 +1,9 @@
 <?php
-// --- WAJIB UNTUK VERCEL: SIMPAN SESSION DI /tmp ---
-ini_set('session.save_path', '/tmp');
-ini_set('session.cookie_path', '/');
-ini_set('session.cookie_secure', 'On'); 
-ini_set('session.cookie_httponly', 'On');
-ini_set('session.cookie_samesite', 'Lax');
-
 session_start();
 include 'koneksi.php';
 
-// Kita cuma redirect kalau dia mau akses halaman login TAPI dia sudah login
-if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header("Location: input.php");
-    exit;
-}
-// 1. CEK COOKIE UNTUK AUTO LOGIN
-if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && isset($_COOKIE['token_aman'])) {
+// 1. BACA COOKIE: Kalau KTP-nya udah ada, langsung lempar ke dashboard
+if (isset($_COOKIE['ingat_nomor_induk']) && isset($_COOKIE['token_aman'])) {
     $no_induk_cookie = pg_escape_string($conn, $_COOKIE['ingat_nomor_induk']);
     $token_cookie = $_COOKIE['token_aman'];
 
@@ -23,19 +11,13 @@ if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && is
     if (pg_num_rows($query_cek) === 1) {
         $data_cookie = pg_fetch_assoc($query_cek);
         if ($token_cookie === hash('sha256', $data_cookie['nomor_induk'])) {
-            $_SESSION['logged_in'] = true;
-            $_SESSION['user_id']   = $data_cookie['id'];
-            $_SESSION['no_induk']  = $data_cookie['nomor_induk'];
-            $_SESSION['nama_lengkap'] = $data_cookie['nama_lengkap'];
-            $_SESSION['role'] = $data_cookie['role'];
-
-            header("Location: input.php"); // FIX: Balik ke input.php
+            header("Location: input.php");
             exit;
         }
     }
 }
 
-// --- PROSES LOGIN POST ---
+// 2. PROSES LOGIN (TOMBOL MASUK DIKLIK)
 $remembered_no_induk = $_COOKIE['ingat_nomor_induk'] ?? '';
 $error = "";
 
@@ -48,25 +30,21 @@ if (isset($_POST['login'])) {
         $data = pg_fetch_assoc($query);
         
         if (password_verify($pass, $data['password'])) {
-            $_SESSION['logged_in'] = true;
-            $_SESSION['user_id']   = $data['id'];
-            $_SESSION['no_induk']  = $data['nomor_induk'];
-            $_SESSION['nama_lengkap'] = $data['nama_lengkap'];
-            $_SESSION['role'] = $data['role'];
-
-            // Cookie handling
-            if (isset($_POST['remember_me'])) {
-                setcookie('ingat_nomor_induk', $no_induk, time() + (86400 * 365), "/");
-                setcookie('token_aman', hash('sha256', $no_induk), time() + (86400 * 365), "/");
-            } else {
-                setcookie('ingat_nomor_induk', '', time() - 3600, "/");
-                setcookie('token_aman', '', time() - 3600, "/");
-            }
+            // FIX UTAMA VERCEL: KITA WAJIB BUAT COOKIE SEBAGAI PENGGANTI SESSION
+            // Kalau centang "Ingat Saya", cookie tahan 1 tahun. Kalau tidak, cookie hilang pas browser ditutup (durasi 0).
+            $durasi = isset($_POST['remember_me']) ? (time() + (86400 * 365)) : 0;
             
-            header("Location: input.php"); // FIX: Balik ke input.php
+            setcookie('ingat_nomor_induk', $no_induk, $durasi, "/");
+            setcookie('token_aman', hash('sha256', $no_induk), $durasi, "/");
+            
+            header("Location: input.php");
             exit;
-        } else { $error = "Password salah!"; }
-    } else { $error = "Nomor Induk tidak ditemukan!"; }
+        } else { 
+            $error = "Password salah!"; 
+        }
+    } else { 
+        $error = "Nomor Induk tidak ditemukan!"; 
+    }
 }
 ?>
 
