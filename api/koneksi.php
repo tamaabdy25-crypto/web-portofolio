@@ -1,16 +1,21 @@
 <?php
-// Vercel akan otomatis mengisi ini dari Environment Variable yang tadi lu simpan
+// Ambil URL-nya
 $db_url = getenv('DATABASE_URL');
+
+// JANGAN LANGSUNG MASUKIN $db_url ke pg_connect kalau dia gagal
+// Kita pastiin dulu dia gak kosong
+if (empty($db_url)) {
+    die("Error: DATABASE_URL tidak ditemukan di Environment Variables Vercel!");
+}
 
 // Koneksi ke PostgreSQL
 $conn = pg_connect($db_url);
 
 if (!$conn) {
-    // Kalau gagal, kasih pesan pendek biar nggak error fatal
     die("Koneksi Database Gagal!");
 }
 
-// FUNGSI PENERJEMAH (Wrapper) AGAR KODE LAMA LU TETEP JALAN
+// ... fungsi wrapper mysqli_ tetap taruh di bawah sini ...
 if (!function_exists('mysqli_query')) {
     function mysqli_query($conn, $query) { return pg_query($conn, $query); }
 }
