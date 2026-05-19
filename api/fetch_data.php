@@ -11,13 +11,13 @@ $my_role = $_SESSION['role'] ?? 'karyawan';
 
 // 2. SET ZONE & SYNC
 date_default_timezone_set('Asia/Jakarta');
-mysqli_query($conn, "SET time_zone = '+07:00'");
+pg_query($conn, "SET TIME ZONE 'Asia/Jakarta'");
 
 // 3. LOGIKA AUTO-ARCHIVE
-mysqli_query($conn, "UPDATE meetings 
+pg_query($conn, "UPDATE meetings 
     SET is_finished = 1 
     WHERE is_finished = 0 
-    AND STR_TO_DATE(CONCAT(meeting_date, ' ', end_time), '%Y-%m-%d %H:%i:%s') <= NOW()");
+    AND TO_TIMESTAMP(meeting_date || ' ' || end_time, 'YYYY-MM-DD HH24:MI:SS') <= NOW()");
 
 $nowWIB = time(); 
 
@@ -29,7 +29,7 @@ $offset = ($halaman - 1) * $limit;
 // 4. FILTER QUERY CERDAS
 if ($is_display) {
     // Mode DISPLAY: Tampilkan SEMUA jadwal hari ini
-    $where_clause = "WHERE meeting_date = CURDATE() AND is_finished = 0";
+    $where_clause = "WHERE meeting_date = CURRENT_DATE AND is_finished = 0";
     $order_clause = "ORDER BY start_time ASC";
 } else {
     // Mode DASHBOARD: Cuma munculin jadwal milik sendiri
@@ -39,14 +39,14 @@ if ($is_display) {
 }
 
 // --- HITUNG TOTAL DATA UNTUK MENCARI JUMLAH HALAMAN ---
-$query_count = mysqli_query($conn, "SELECT COUNT(*) as total FROM meetings $where_clause");
-$row_count = mysqli_fetch_assoc($query_count);
+$query_count = pg_query($conn, "SELECT COUNT(*) as total FROM meetings $where_clause");
+$row_count = pg_fetch_assoc($query_count);
 $total_data = $row_count['total'];
 $total_halaman = ceil($total_data / $limit);
 
 // --- QUERY UTAMA DENGAN LIMIT & OFFSET ---
 $sql = "SELECT * FROM meetings $where_clause $order_clause LIMIT $limit OFFSET $offset";
-$res = mysqli_query($conn, $sql);
+$res = pg_query($conn, $sql);
 
 echo "<table class='table table-hover align-middle'>
         <thead>
@@ -59,7 +59,7 @@ echo "      </tr>
         </thead>
         <tbody>";
 
-if (mysqli_num_rows($res) == 0) {
+if (pg_num_rows($res) == 0) {
     $colspan = $is_display ? 3 : 4;
     $pesan = $is_display ? "Tidak ada jadwal meeting hari ini." : "Belum ada jadwal meeting yang kamu buat.";
     
@@ -79,7 +79,7 @@ if (mysqli_num_rows($res) == 0) {
         '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
     ];
 
-    while ($row = mysqli_fetch_assoc($res)) {
+    while ($row = pg_fetch_assoc($res)) {
         $startWIB = strtotime($row['meeting_date'] . ' ' . $row['start_time']);
         $endWIB   = strtotime($row['meeting_date'] . ' ' . $row['end_time']);
 
