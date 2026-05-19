@@ -20,37 +20,45 @@ date_default_timezone_set('Asia/Jakarta');
 $tgl_mulai = date('Y-m-d');
 $tgl_selesai = date('Y-m-d', strtotime('+30 days'));
 
-// 2. QUERY KE DATABASE (Cari yang belum selesai & masuk dalam rentang 30 hari)
-// FIX POSTGRESQL: Coba pakai angka 0 dulu, kalau database ngamuk ganti pakai FALSE
-$sql_angka = "SELECT * FROM meetings 
-        WHERE is_finished = 0 
-        AND meeting_date >= '$tgl_mulai' 
-        AND meeting_date <= '$tgl_selesai' 
-        ORDER BY meeting_date ASC, start_time ASC";
-        
-$res = @pg_query($conn, $sql_angka);
+// --- LOGIKA HALAMAN (PAGINATION) ---
+$limit = 10; 
+$halaman = isset($_GET['hal']) ? (int)$_GET['hal'] : 1;
+$offset = ($halaman - 1) * $limit;
 
-if (!$res) {
-    // Kalau query angka gagal, tembak pakai bahasa Boolean
-    $sql_bool = "SELECT * FROM meetings 
-            WHERE is_finished = FALSE 
-            AND meeting_date >= '$tgl_mulai' 
-            AND meeting_date <= '$tgl_selesai' 
-            ORDER BY meeting_date ASC, start_time ASC";
-    $res = @pg_query($conn, $sql_bool);
+// FIX POSTGRESQL: Coba pakai angka 0 dulu, kalau database ngamuk ganti pakai FALSE
+$syarat_angka = "FROM meetings WHERE is_finished = 0 AND meeting_date >= '$tgl_mulai' AND meeting_date <= '$tgl_selesai'";
+$syarat_bool = "FROM meetings WHERE is_finished = FALSE AND meeting_date >= '$tgl_mulai' AND meeting_date <= '$tgl_selesai'";
+
+// Cek dulu database maunya bahasa apa
+$sql_cek = @pg_query($conn, "SELECT 1 $syarat_angka LIMIT 1");
+$query_syarat = ($sql_cek !== false) ? $syarat_angka : $syarat_bool;
+
+// 2. HITUNG TOTAL HALAMAN DULU
+$sql_total = @pg_query($conn, "SELECT COUNT(*) as total $query_syarat");
+
+if (!$sql_total) {
+    echo json_encode(["status" => "error", "pesan" => "DB Error Total: " . pg_last_error($conn)]);
+    exit;
 }
 
-// Kalau masih error, tangkap pesan errornya biar frontend tau masalahnya
+$row_total = pg_fetch_assoc($sql_total);
+$total_data = $row_total['total'];
+$total_halaman = ceil($total_data / $limit);
+if ($total_halaman == 0) $total_halaman = 1; // Minimal 1 halaman
+
+// 3. AMBIL DATA SESUAI HALAMAN
+$sql = "SELECT * $query_syarat ORDER BY meeting_date ASC, start_time ASC LIMIT $limit OFFSET $offset";
+$res = @pg_query($conn, $sql);
+
 if (!$res) {
     echo json_encode(["status" => "error", "pesan" => "DB Error: " . pg_last_error($conn)]);
     exit;
 }
 
 $data_jadwal = [];
-
 $bulan_indo = ['01'=>'Jan','02'=>'Feb','03'=>'Mar','04'=>'Apr','05'=>'Mei','06'=>'Jun','07'=>'Jul','08'=>'Agt','09'=>'Sep','10'=>'Okt','11'=>'Nov','12'=>'Des'];
 
-// 3. RAPIKAN FORMAT DATA
+// 4. RAPIKAN FORMAT DATA
 while ($row = pg_fetch_assoc($res)) {
     $tgl_parts = explode('-', $row['meeting_date']);
     
@@ -66,11 +74,13 @@ while ($row = pg_fetch_assoc($res)) {
     $data_jadwal[] = $row;
 }
 
-// 4. BUNGKUS JADI JSON
+// 5. BUNGKUS JADI JSON LENGKAP DENGAN DATA HALAMAN
 echo json_encode([
     "status" => "success",
     "info_mulai" => date('d M', strtotime($tgl_mulai)),
     "info_selesai" => date('d M Y', strtotime($tgl_selesai)),
+    "halaman_sekarang" => $halaman,
+    "total_halaman" => $total_halaman,
     "data" => $data_jadwal
 ]);
 ?>
