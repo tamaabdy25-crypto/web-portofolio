@@ -1,4 +1,10 @@
 <?php
+// --- KONFIGURASI SESI AGAR AWET DI SERVERLESS ---
+ini_set('session.cookie_path', '/');
+ini_set('session.cookie_secure', 'On'); 
+ini_set('session.cookie_httponly', 'On');
+ini_set('session.cookie_samesite', 'Lax');
+
 session_start();
 include 'koneksi.php'; 
 
@@ -19,8 +25,10 @@ if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && is
     }
 }
 
+// --- PENGAMANAN HALAMAN ---
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header("Location: login.php"); exit;
+    header("Location: login.php"); 
+    exit;
 }
 
 date_default_timezone_set('Asia/Jakarta');
