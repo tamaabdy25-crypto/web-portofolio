@@ -1,11 +1,17 @@
 <?php
+// --- KONFIGURASI SESI AGAR AWET DI SERVERLESS VERCEL ---
+ini_set('session.cookie_path', '/');
+ini_set('session.cookie_secure', 'On'); 
+ini_set('session.cookie_httponly', 'On');
+ini_set('session.cookie_samesite', 'Lax');
+
 session_start();
 include 'koneksi.php';
 
-// --- LOGIKA CEK SESSION (JANGAN DI-REDIRECT KALAU SUDAH DI LOGIN.PHP) ---
+// --- LOGIKA CEK SESSION (JANGAN DI-REDIRECT KALAU SUDAH DI SINI) ---
 // Kita cuma redirect kalau dia mau akses halaman login TAPI dia sudah login
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header("Location: input.php");
+    header("Location: index.php"); // Pastikan ini nama file dashboard lu
     exit;
 }
 
@@ -24,7 +30,7 @@ if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && is
             $_SESSION['nama_lengkap'] = $data_cookie['nama_lengkap'];
             $_SESSION['role'] = $data_cookie['role'];
 
-            header("Location: input.php");
+            header("Location: index.php");
             exit;
         }
     }
@@ -58,7 +64,7 @@ if (isset($_POST['login'])) {
                 setcookie('token_aman', '', time() - 3600, "/");
             }
             
-            header("Location: input.php");
+            header("Location: index.php");
             exit;
         } else { $error = "Password salah!"; }
     } else { $error = "Nomor Induk tidak ditemukan!"; }
