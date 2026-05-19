@@ -2,15 +2,21 @@
 session_start();
 include 'koneksi.php';
 
+// --- LOGIKA CEK SESSION (JANGAN DI-REDIRECT KALAU SUDAH DI LOGIN.PHP) ---
+// Kita cuma redirect kalau dia mau akses halaman login TAPI dia sudah login
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+    header("Location: input.php");
+    exit;
+}
+
 // 1. CEK COOKIE UNTUK AUTO LOGIN
 if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && isset($_COOKIE['token_aman'])) {
-    $no_induk_cookie = $_COOKIE['ingat_nomor_induk'];
+    $no_induk_cookie = pg_escape_string($conn, $_COOKIE['ingat_nomor_induk']);
     $token_cookie = $_COOKIE['token_aman'];
 
     $query_cek = pg_query($conn, "SELECT * FROM users WHERE nomor_induk='$no_induk_cookie'");
     if (pg_num_rows($query_cek) === 1) {
         $data_cookie = pg_fetch_assoc($query_cek);
-        
         if ($token_cookie === hash('sha256', $data_cookie['nomor_induk'])) {
             $_SESSION['logged_in'] = true;
             $_SESSION['user_id']   = $data_cookie['id'];
@@ -24,16 +30,10 @@ if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && is
     }
 }
 
-// 2. CEK SESSION
-if (isset($_SESSION['logged_in'])) {
-    header("Location: input.php");
-    exit;
-}
-
-// --- LOGIKA AMBIL DATA DARI COOKIE ---
+// --- PROSES LOGIN POST ---
 $remembered_no_induk = $_COOKIE['ingat_nomor_induk'] ?? '';
-
 $error = "";
+
 if (isset($_POST['login'])) {
     $no_induk = pg_escape_string($conn, $_POST['nomor_induk']);
     $pass = $_POST['password'];
@@ -49,10 +49,10 @@ if (isset($_POST['login'])) {
             $_SESSION['nama_lengkap'] = $data['nama_lengkap'];
             $_SESSION['role'] = $data['role'];
 
+            // Cookie handling
             if (isset($_POST['remember_me'])) {
-                $durasi = time() + (86400 * 365 * 50); 
-                setcookie('ingat_nomor_induk', $no_induk, $durasi, "/");
-                setcookie('token_aman', hash('sha256', $no_induk), $durasi, "/");
+                setcookie('ingat_nomor_induk', $no_induk, time() + (86400 * 365), "/");
+                setcookie('token_aman', hash('sha256', $no_induk), time() + (86400 * 365), "/");
             } else {
                 setcookie('ingat_nomor_induk', '', time() - 3600, "/");
                 setcookie('token_aman', '', time() - 3600, "/");
@@ -60,12 +60,8 @@ if (isset($_POST['login'])) {
             
             header("Location: input.php");
             exit;
-        } else { 
-            $error = "Password salah!"; 
-        }
-    } else { 
-        $error = "Nomor Induk tidak ditemukan!"; 
-    }
+        } else { $error = "Password salah!"; }
+    } else { $error = "Nomor Induk tidak ditemukan!"; }
 }
 ?>
 
