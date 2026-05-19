@@ -8,7 +8,7 @@ include 'koneksi.php';
 // ==========================================
 // KODE SAKTI: SINKRONISASI JAM SERVER BULE KE JAM JAKARTA
 // ==========================================
-mysqli_query($conn, "SET time_zone = '+07:00'");
+pg_query($conn, "SET TIME ZONE 'Asia/Jakarta'");
 // ==========================================
 
 // PANGGIL ALAT KURIR (PHPMAILER)
@@ -59,14 +59,14 @@ $log_aktivitas = "";
 // ==========================================
 // MESIN 1: KIRIM EMAIL UNDANGAN BARU
 // ==========================================
-$q_undangan = mysqli_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m.title, m.room_name, m.meeting_date, m.start_time, m.end_time, m.nama_pengusul 
+$q_undangan = pg_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m.title, m.room_name, m.meeting_date, m.start_time, m.end_time, m.nama_pengusul 
     FROM agenda_peserta ap 
     JOIN users u ON ap.id_user = u.id 
     JOIN meetings m ON ap.id_agenda = m.id 
     WHERE ap.email_terkirim_undangan = 0 AND u.email IS NOT NULL AND u.email != ''");
 
-while ($row = mysqli_fetch_assoc($q_undangan)) {
-    mysqli_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = 1 WHERE id = '{$row['id_ap']}'");
+while ($row = pg_fetch_assoc($q_undangan)) {
+    pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = 1 WHERE id = '{$row['id_ap']}'");
 
     $subjek = "Undangan Meeting: " . $row['title'];
     $pesan = "
@@ -89,7 +89,7 @@ while ($row = mysqli_fetch_assoc($q_undangan)) {
     if (kirimEmail($row['email'], $row['nama_lengkap'], $subjek, $pesan)) {
         $log_aktivitas .= "<div class='mb-2 text-success fw-bold'><i class='bi bi-check-circle-fill me-2'></i>Undangan terkirim ke: <span class='text-dark'>{$row['email']}</span></div>";
     } else {
-        mysqli_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = 0 WHERE id = '{$row['id_ap']}'");
+        pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = 0 WHERE id = '{$row['id_ap']}'");
         $log_aktivitas .= "<div class='mb-2 text-danger fw-bold'><i class='bi bi-x-circle-fill me-2'></i>Gagal kirim undangan ke: <span class='text-dark'>{$row['email']}</span></div>";
     }
 }
@@ -97,17 +97,17 @@ while ($row = mysqli_fetch_assoc($q_undangan)) {
 // ==========================================
 // MESIN 2: KIRIM EMAIL PENGINGAT (5 Menit Sebelum Mulai)
 // ==========================================
-$q_pengingat = mysqli_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m.title, m.room_name, m.start_time, m.end_time 
+$q_pengingat = pg_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m.title, m.room_name, m.start_time, m.end_time 
     FROM agenda_peserta ap 
     JOIN users u ON ap.id_user = u.id 
     JOIN meetings m ON ap.id_agenda = m.id 
     WHERE ap.email_terkirim_pengingat = 0 
-    AND m.meeting_date = CURDATE()
-    AND TIMESTAMPDIFF(MINUTE, NOW(), CONCAT(m.meeting_date, ' ', m.start_time)) BETWEEN 0 AND 5
+    AND m.meeting_date = CURRENT_DATE
+    AND TO_TIMESTAMP(m.meeting_date || ' ' || m.start_time, 'YYYY-MM-DD HH24:MI:SS') BETWEEN NOW() AND NOW() + INTERVAL '5 minutes'
     AND u.email IS NOT NULL AND u.email != ''");
 
-while ($row = mysqli_fetch_assoc($q_pengingat)) {
-    mysqli_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = 1 WHERE id = '{$row['id_ap']}'");
+while ($row = pg_fetch_assoc($q_pengingat)) {
+    pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = 1 WHERE id = '{$row['id_ap']}'");
 
     $subjek = "PENGINGAT: Meeting '{$row['title']}' Segera Dimulai!";
     $pesan = "
@@ -130,26 +130,26 @@ while ($row = mysqli_fetch_assoc($q_pengingat)) {
     if (kirimEmail($row['email'], $row['nama_lengkap'], $subjek, $pesan)) {
         $log_aktivitas .= "<div class='mb-2 text-warning fw-bold'><i class='bi bi-alarm-fill me-2'></i>Pengingat terkirim ke: <span class='text-dark'>{$row['email']}</span></div>";
     } else {
-        mysqli_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = 0 WHERE id = '{$row['id_ap']}'");
+        pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = 0 WHERE id = '{$row['id_ap']}'");
     }
 }
 
 // ==========================================
 // MESIN 3: KIRIM EMAIL PEMBATALAN DARI ANTREAN
 // ==========================================
-$q_batal = mysqli_query($conn, "SELECT * FROM antrean_email WHERE status = 0");
-while ($row = mysqli_fetch_assoc($q_batal)) {
+$q_batal = pg_query($conn, "SELECT * FROM antrean_email WHERE status = 0");
+while ($row = pg_fetch_assoc($q_batal)) {
     // Kunci data biar nggak double spam!
-    mysqli_query($conn, "UPDATE antrean_email SET status = 1 WHERE id = '{$row['id']}'");
+    pg_query($conn, "UPDATE antrean_email SET status = 1 WHERE id = '{$row['id']}'");
     
     // Eksekusi ngirim suratnya
     if (kirimEmail($row['email_tujuan'], $row['nama_tujuan'], $row['subjek'], $row['pesan_html'])) {
         // Kalau sukses kekirim, datanya langsung dihancurkan biar database lu ga penuh!
-        mysqli_query($conn, "DELETE FROM antrean_email WHERE id = '{$row['id']}'");
+        pg_query($conn, "DELETE FROM antrean_email WHERE id = '{$row['id']}'");
         $log_aktivitas .= "<div class='mb-2 text-danger fw-bold'><i class='bi bi-trash-fill me-2'></i>Pembatalan terkirim ke: <span class='text-dark'>{$row['email_tujuan']}</span></div>";
     } else {
         // Kalau gagal, balikin statusnya biar besok dikirim lagi
-        mysqli_query($conn, "UPDATE antrean_email SET status = 0 WHERE id = '{$row['id']}'");
+        pg_query($conn, "UPDATE antrean_email SET status = 0 WHERE id = '{$row['id']}'");
     }
 }
 
