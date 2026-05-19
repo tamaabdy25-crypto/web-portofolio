@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'koneksi.php'; 
+include 'koneksi.php';
 
 // --- LOGIKA BACA COOKIE KTP ---
 $akses_diberikan = false;
