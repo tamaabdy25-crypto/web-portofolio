@@ -10,8 +10,8 @@ if (!isset($_SESSION['logged_in'])) {
 $my_id = $_SESSION['user_id'] ?? 0;
 
 // --- TAMBAHAN: AMBIL WALLPAPER USER DARI DATABASE ---
-$q_theme = mysqli_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
-$data_theme = mysqli_fetch_assoc($q_theme);
+$q_theme = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
+$data_theme = pg_fetch_assoc($q_theme);
 $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 
 // LOGIKA DATABASE SUDAH DIPINDAH KE api_intip.php
