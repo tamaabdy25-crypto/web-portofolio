@@ -2,11 +2,12 @@
 // AMBIL DARI VERCEL (PRODUCTION) ATAU DARI STRING LU (DEVELOPMENT)
 $db_url = getenv('DATABASE_URL') ?: "postgresql://postgres:23UmWlFdePBFCEqn@db.psskhwflnkyzzhdtxdku.supabase.co:5432/postgres";
 
-// Koneksi ke PostgreSQL
+// Tambahkan sslmode=require di opsi koneksi jika string url tidak cukup
 $conn = pg_connect($db_url);
 
 if (!$conn) {
-    die("Gagal konek ke database: " . pg_last_error());
+    // Jangan panggil pg_last_error() di sini kalau $conn false, cukup die saja
+    die("Koneksi Database Gagal!");
 }
 
 // FUNGSI PENERJEMAH (Wrapper) dengan pengecekan function_exists
