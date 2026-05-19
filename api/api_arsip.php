@@ -1,4 +1,8 @@
 <?php
+// MATIKAN ERROR HTML BIAR JSON GAK RUSAK (PENTING DI VERCEL!)
+error_reporting(0);
+ini_set('display_errors', 0);
+
 // Mulai session buat ngenalin siapa yang lagi login (ngambil cookie PHP)
 session_start();
 
@@ -24,8 +28,14 @@ $limit = 10;
 $halaman = isset($_GET['hal']) ? (int)$_GET['hal'] : 1;
 $offset = ($halaman - 1) * $limit;
 
-// Syarat data masuk arsip (DIPERBAIKI KHUSUS POSTGRESQL)
-$query_syarat = "FROM meetings WHERE user_id = '$my_id' AND (is_finished = 1 OR TO_TIMESTAMP(meeting_date || ' ' || end_time, 'YYYY-MM-DD HH24:MI:SS') < NOW())";
+// FIX POSTGRESQL: Kita bikin 2 skenario, coba pake angka (1), kalau gagal (karena Supabase) pake Boolean (TRUE).
+// FIX TANGGAL: Cukup pake (meeting_date + end_time)
+$syarat_angka = "FROM meetings WHERE user_id = '$my_id' AND (is_finished = 1 OR (meeting_date + end_time) < CURRENT_TIMESTAMP)";
+$syarat_bool = "FROM meetings WHERE user_id = '$my_id' AND (is_finished = TRUE OR (meeting_date + end_time) < CURRENT_TIMESTAMP)";
+
+// Cek dulu database maunya bahasa apa
+$sql_cek = @pg_query($conn, "SELECT 1 $syarat_angka LIMIT 1");
+$query_syarat = ($sql_cek !== false) ? $syarat_angka : $syarat_bool;
 
 // Cek apakah ini minta data buat nge-print semua?
 $is_print_mode = isset($_GET['print']) && $_GET['print'] == 'semua';
@@ -36,16 +46,30 @@ if ($is_print_mode) {
     $total_halaman = 1;
 } else {
     // Kalau normal, hitung total halaman dulu
-    $sql_total = pg_query($conn, "SELECT COUNT(*) as total $query_syarat");
+    $sql_total = @pg_query($conn, "SELECT COUNT(*) as total $query_syarat");
+    
+    // Kalau masih error, balikin errornya ke Frontend biar kita tau
+    if (!$sql_total) {
+        echo json_encode(["status" => "error", "pesan" => "DB Error Total: " . pg_last_error($conn)]);
+        exit;
+    }
+    
     $row_total = pg_fetch_assoc($sql_total);
     $total_data = $row_total['total'];
     $total_halaman = ceil($total_data / $limit);
+    if ($total_halaman == 0) $total_halaman = 1; // Minimal 1 halaman
 
     // Ambil data sesuai halaman saat ini (Limit)
     $sql = "SELECT * $query_syarat ORDER BY meeting_date DESC, end_time DESC LIMIT $limit OFFSET $offset";
 }
 
-$result = pg_query($conn, $sql);
+$result = @pg_query($conn, $sql);
+
+if (!$result) {
+    echo json_encode(["status" => "error", "pesan" => "DB Error Fetch: " . pg_last_error($conn)]);
+    exit;
+}
+
 $data_arsip = [];
 
 while ($row = pg_fetch_assoc($result)) {
