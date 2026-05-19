@@ -7,9 +7,9 @@ if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && is
     $cookie_no_induk = $_COOKIE['ingat_nomor_induk'];
     $cookie_token    = $_COOKIE['token_aman'];
     if ($cookie_token === hash('sha256', $cookie_no_induk)) {
-        $q_cek = mysqli_query($conn, "SELECT * FROM users WHERE nomor_induk = '$cookie_no_induk'");
-        if (mysqli_num_rows($q_cek) > 0) {
-            $data = mysqli_fetch_assoc($q_cek);
+        $q_cek = pg_query($conn, "SELECT * FROM users WHERE nomor_induk = '$cookie_no_induk'");
+        if (pg_num_rows($q_cek) > 0) {
+            $data = pg_fetch_assoc($q_cek);
             $_SESSION['logged_in']    = true;
             $_SESSION['user_id']      = $data['id'];
             $_SESSION['no_induk']     = $data['nomor_induk'];
@@ -30,8 +30,8 @@ $my_no_induk  = $_SESSION['no_induk'] ?? "";
 $nama_lengkap = $_SESSION['nama_lengkap'] ?? "Tamu";
 $my_role      = $_SESSION['role'] ?? "USER"; 
 
-$q_user = mysqli_query($conn, "SELECT theme_wallpaper, foto_profil FROM users WHERE id = '$my_id'");
-$data_user = mysqli_fetch_assoc($q_user);
+$q_user = pg_query($conn, "SELECT theme_wallpaper, foto_profil FROM users WHERE id = '$my_id'");
+$data_user = pg_fetch_assoc($q_user);
 $user_wallpaper = $data_user['theme_wallpaper'] ?? "";
 $user_foto = $data_user['foto_profil'] ?? "";
 ?>
@@ -91,7 +91,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .swal2-styled.swal2-confirm:hover { opacity: 0.85 !important; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; background-image: none !important; }
 
         @media (max-width: 992px) { body { padding-bottom: 0 !important; } .page-overlay { padding-bottom: 20px; } .navbar .container { flex-wrap: nowrap; } .dynamic-logo { height: 22px; width: 85px; } .dropdown-menu-end { position: absolute !important; right: 0; left: auto; } .action-buttons-container { display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px !important; margin-bottom: 20px !important; } .action-buttons-container .btn { width: 100%; font-size: 13px !important; padding: 10px !important; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; margin: 0 !important; } .action-buttons-container .btn i { margin-right: 6px !important; font-size: 15px; } .card { padding: 20px 15px !important; border-radius: 16px !important; min-height: calc(100vh - 260px); display: flex; flex-direction: column; margin-bottom: 10px !important; } .card h5 { font-size: 1.15rem; margin-bottom: 20px !important; } #area-tabel-otomatis { flex-grow: 1; overflow-x: auto; -webkit-overflow-scrolling: touch; } .modal-body label { font-size: 12px; } .modal-title { font-size: 1.1rem; } }
-    
+        
         /* HILANGIN BLOK BIRU PAS MENU DROPDOWN DI-KLIK */
         .dropdown-menu .dropdown-item:active, .dropdown-menu .dropdown-item:focus { background-color: #f8f9fa !important; color: inherit !important; }
         .dropdown-menu .dropdown-item:hover { background-color: #f1f5f9 !important; color: inherit !important; }
