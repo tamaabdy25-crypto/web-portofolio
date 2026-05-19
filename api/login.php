@@ -11,7 +11,7 @@ include 'koneksi.php';
 // --- LOGIKA CEK SESSION (JANGAN DI-REDIRECT KALAU SUDAH DI SINI) ---
 // Kita cuma redirect kalau dia mau akses halaman login TAPI dia sudah login
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header("Location: index.php"); // Pastikan ini nama file dashboard lu
+    header("Location: input.php"); // FIX: Balik ke input.php
     exit;
 }
 
@@ -30,7 +30,7 @@ if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && is
             $_SESSION['nama_lengkap'] = $data_cookie['nama_lengkap'];
             $_SESSION['role'] = $data_cookie['role'];
 
-            header("Location: index.php");
+            header("Location: input.php"); // FIX: Balik ke input.php
             exit;
         }
     }
@@ -64,7 +64,7 @@ if (isset($_POST['login'])) {
                 setcookie('token_aman', '', time() - 3600, "/");
             }
             
-            header("Location: index.php");
+            header("Location: input.php"); // FIX: Balik ke input.php
             exit;
         } else { $error = "Password salah!"; }
     } else { $error = "Nomor Induk tidak ditemukan!"; }
