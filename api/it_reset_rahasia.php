@@ -21,13 +21,13 @@ if (isset($_POST['hapus_akun'])) {
     $id_user   = $_POST['id_user_hapus'];
 
     // Hapus file tema jika ada sebelum menghapus user
-    $cek_file = mysqli_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$id_user'");
-    $data_file = mysqli_fetch_assoc($cek_file);
+    $cek_file = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$id_user'");
+    $data_file = pg_fetch_assoc($cek_file);
     if (!empty($data_file['theme_wallpaper']) && file_exists($data_file['theme_wallpaper'])) {
         unlink($data_file['theme_wallpaper']); 
     }
 
-    if (mysqli_query($conn, "DELETE FROM users WHERE id = '$id_user'")) {
+    if (pg_query($conn, "DELETE FROM users WHERE id = '$id_user'")) {
         $status_msg = "sukses_hapus";
     } else {
         $status_msg = "gagal_sistem";
@@ -40,14 +40,14 @@ if (isset($_POST['hapus_akun'])) {
 if (isset($_POST['edit_akun_ajax'])) {
     header('Content-Type: application/json');
     $id_user   = $_POST['id_user'];
-    $nama      = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
-    $email     = mysqli_real_escape_string($conn, $_POST['email']);
+    $nama      = pg_escape_string($conn, $_POST['nama_lengkap']);
+    $email     = pg_escape_string($conn, $_POST['email']);
     $role      = $_POST['role'];
     $pw_custom = trim($_POST['pw_custom']); 
 
     // Ambil data user target dulu buat ngecek password lamanya
-    $q_target = mysqli_query($conn, "SELECT password FROM users WHERE id='$id_user'");
-    $target_user = mysqli_fetch_assoc($q_target);
+    $q_target = pg_query($conn, "SELECT password FROM users WHERE id='$id_user'");
+    $target_user = pg_fetch_assoc($q_target);
 
     // Kalau kolom password diisi, berarti sekalian ganti password
     if (!empty($pw_custom)) {
@@ -67,7 +67,7 @@ if (isset($_POST['edit_akun_ajax'])) {
         $query_update = "UPDATE users SET nama_lengkap='$nama', email='$email', role='$role' WHERE id='$id_user'";
     }
 
-    if(mysqli_query($conn, $query_update)) {
+    if(pg_query($conn, $query_update)) {
         echo json_encode(["status" => "success", "pesan" => "Data akun berhasil di-update!"]);
     } else {
         echo json_encode(["status" => "error", "pesan" => "Gagal update ke database!"]);
@@ -78,23 +78,23 @@ if (isset($_POST['edit_akun_ajax'])) {
 
 // --- LOGIKA REGISTER AKUN BARU ---
 if (isset($_POST['register_akun'])) {
-    $no_induk = mysqli_real_escape_string($conn, $_POST['no_induk']);
-    $nama     = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
-    $email    = mysqli_real_escape_string($conn, $_POST['email']);
+    $no_induk = pg_escape_string($conn, $_POST['no_induk']);
+    $nama     = pg_escape_string($conn, $_POST['nama_lengkap']);
+    $email    = pg_escape_string($conn, $_POST['email']);
     $pass     = $_POST['password'];
     $role     = $_POST['role'];
 
     if (strlen($pass) < 6) {
         $status_msg = "pw_kurang";
     } else {
-        $cek = mysqli_query($conn, "SELECT id FROM users WHERE nomor_induk='$no_induk'");
-        if (mysqli_num_rows($cek) > 0) {
+        $cek = pg_query($conn, "SELECT id FROM users WHERE nomor_induk='$no_induk'");
+        if (pg_num_rows($cek) > 0) {
             $status_msg = "duplikat";
         } else {
             $hashed_pw = password_hash($pass, PASSWORD_DEFAULT);
             $sql = "INSERT INTO users (nomor_induk, nama_lengkap, email, password, role) 
                     VALUES ('$no_induk', '$nama', '$email', '$hashed_pw', '$role')";            
-            if (mysqli_query($conn, $sql)) {
+            if (pg_query($conn, $sql)) {
                 $status_msg = "sukses_register";
             } else {
                 $status_msg = "gagal_sistem";
@@ -110,16 +110,17 @@ $offset = ($halaman - 1) * $limit;
 
 $where_clause = "";
 if (!empty($search)) {
-    $search_safe = mysqli_real_escape_string($conn, $search);
-    $where_clause = " WHERE nomor_induk LIKE '%$search_safe%' OR nama_lengkap LIKE '%$search_safe%' OR email LIKE '%$search_safe%' ";
+    $search_safe = pg_escape_string($conn, $search);
+    // 💡 POSTGRESQL FIX: Menggunakan ILIKE agar pencarian tidak case-sensitive
+    $where_clause = " WHERE nomor_induk ILIKE '%$search_safe%' OR nama_lengkap ILIKE '%$search_safe%' OR email ILIKE '%$search_safe%' ";
 }
 
-$sql_count = mysqli_query($conn, "SELECT COUNT(*) as total FROM users $where_clause");
-$row_count = mysqli_fetch_assoc($sql_count);
+$sql_count = pg_query($conn, "SELECT COUNT(*) as total FROM users $where_clause");
+$row_count = pg_fetch_assoc($sql_count);
 $total_data = $row_count['total'];
 $total_halaman = ceil($total_data / $limit);
 
-$query_user = mysqli_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role FROM users 
+$query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role FROM users 
     $where_clause 
     ORDER BY nama_lengkap ASC 
     LIMIT $limit OFFSET $offset");
@@ -258,8 +259,8 @@ $query_user = mysqli_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, 
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if(mysqli_num_rows($query_user) > 0): ?>
-                            <?php while($u = mysqli_fetch_assoc($query_user)): ?>
+                        <?php if(pg_num_rows($query_user) > 0): ?>
+                            <?php while($u = pg_fetch_assoc($query_user)): ?>
                             <tr>
                                 <td class="px-3">
                                     <div class="d-flex align-items-center mb-1">
