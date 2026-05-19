@@ -1,23 +1,38 @@
 <?php
+// MATIKAN ERROR HTML BIAR JSON GAK RUSAK
+error_reporting(0);
+ini_set('display_errors', 0);
+
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
 include 'koneksi.php';
 
-// Ditambah escape string biar aman dari karakter aneh/hacker
+// 1. Ambil input pencarian
 $search = pg_escape_string($conn, $_GET['q'] ?? '');
 
-// Cari nama lengkap karyawan atau email dari tabel users
-$query = pg_query($conn, "SELECT id, nama_lengkap, email FROM users 
-                              WHERE nama_lengkap LIKE '%$search%' 
-                              OR email LIKE '%$search%' 
-                              LIMIT 10");
+// 2. QUERY PAKAI ILIKE (Case-Insensitive)
+// ILIKE bikin pencarian lu jadi pinter, mau ketik 'yudha', 'YUDHA', atau 'YuDha' tetep ketemu
+$sql = "SELECT id, nama_lengkap, email FROM users 
+        WHERE nama_lengkap ILIKE '%$search%' 
+        OR email ILIKE '%$search%' 
+        LIMIT 10";
+
+$query = @pg_query($conn, $sql);
+
+if (!$query) {
+    // Kalau query gagal, kasih tau lewat JSON biar frontend gak muter-muter
+    echo json_encode(["status" => "error", "pesan" => pg_last_error($conn)]);
+    exit;
+}
 
 $data = [];
 while($row = pg_fetch_assoc($query)) {
     $data[] = [
-        'id'   => $row['id'], // ID ini yang nanti disimpan ke database
-        'text' => $row['nama_lengkap'] . " (" . $row['email'] . ")" // Teks ini yang muncul di layar
+        'id'   => $row['id'], 
+        'text' => $row['nama_lengkap'] . " (" . $row['email'] . ")" 
     ];
 }
 
-// Kirim hasil ke form
+// 3. Kirim hasil
 echo json_encode($data);
 ?>
