@@ -53,15 +53,19 @@ $tanggal_join = (isset($user['created_at']) && !empty($user['created_at']) && $u
                 ? date('d M Y', strtotime($user['created_at'])) 
                 : "Baru Saja";
 
+// =========================================================================
+// KUNCI BRANKAS SUPABASE LU (WAJIB DIISI!)
+// =========================================================================
+$supabase_url = "https://psskhwflnkyzzhdtxdku.supabase.co"; // Ganti pake: https://psskhwflnkyzzhdtxdku.supabase.co
+$supabase_key = "sb_publishable_N2b5N1u8PlEc8dDk6yJzOw_DsQIVG9v";     // Ganti pake: sb_publishable_...
+$bucket_name  = "evision-storage";
+// =========================================================================
+
 // ==============================================================
-// BLOK AKSI UPLOAD / HAPUS FOTO PROFIL
+// BLOK AKSI UPLOAD / HAPUS FOTO PROFIL (VIA SUPABASE API)
 // ==============================================================
 if (isset($_POST['aksi_foto'])) {
     $jenis_aksi = $_POST['aksi_foto'];
-    $target_dir = "uploads_profil/";
-    
-    // Bikin folder kalau belum ada
-    if (!file_exists($target_dir)) { mkdir($target_dir, 0777, true); }
 
     if ($jenis_aksi === 'upload' && isset($_FILES["file_foto"]) && $_FILES["file_foto"]["error"] == 0) {
         $file_name = $_FILES["file_foto"]["name"];
@@ -74,34 +78,50 @@ if (isset($_POST['aksi_foto'])) {
         
         if (!in_array($file_ext, $allowed_ext)) {
             $error_msg = "Hanya file JPG, JPEG, PNG & WEBP yang diizinkan!";
-        } else if ($file_size > 2000000) { // Batas 2MB biar enteng
+        } else if ($file_size > 2097152) { // Batas 2MB = 2097152 bytes
             $error_msg = "Ukuran foto maksimal 2MB!";
         } else {
-            // Beri nama file unik (ID user + waktu) biar gak bentrok
-            $new_file_name = "profil_" . $user_id . "_" . time() . "." . $file_ext;
-            $target_file = $target_dir . $new_file_name;
+            // Beri nama file unik (ID user + waktu)
+            $nama_unik = "profil_" . $user_id . "_" . time() . "." . $file_ext;
             
-            // JURUS UNLINK: Hapus foto lama secara fisik dari server kalau ada
-            if (!empty($user_foto) && file_exists($user_foto)) {
-                unlink($user_foto);
-            }
+            // Alamat lengkap kurir buat nganter file
+            $upload_url = $supabase_url . "/storage/v1/object/" . $bucket_name . "/" . $nama_unik;
             
-            // Pindahkan file baru
-            if (move_uploaded_file($file_tmp, $target_file)) {
-                pg_query($conn, "UPDATE users SET foto_profil = '$target_file' WHERE id = '$user_id'");
-                $user_foto = $target_file; // Update variabel untuk tampilan
+            $file_content = file_get_contents($file_tmp);
+            $mime_type = mime_content_type($file_tmp);
+
+            // JALUR API cURL KE SUPABASE
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $upload_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $file_content);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "Authorization: Bearer " . $supabase_key,
+                "apikey: " . $supabase_key,
+                "Content-Type: " . $mime_type
+            ]);
+
+            $response = curl_exec($ch);
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            // CEK STATUS NYAMPE ATAU GAK
+            if ($http_code == 200 || $http_code == 201) {
+                // Ambil link URL Publik-nya
+                $public_url = $supabase_url . "/storage/v1/object/public/" . $bucket_name . "/" . $nama_unik;
+
+                // Update database
+                pg_query($conn, "UPDATE users SET foto_profil = '$public_url' WHERE id = '$user_id'");
+                $user_foto = $public_url; 
                 $success_msg = "Foto profil berhasil diperbarui!";
             } else {
-                $error_msg = "Gagal mengunggah foto. Periksa hak akses folder!";
+                $error_msg = "Gagal mengunggah foto ke Supabase. Cek URL/API Key!";
             }
         }
     } 
     else if ($jenis_aksi === 'hapus') {
-        // JURUS UNLINK: Hapus foto dari server secara fisik
-        if (!empty($user_foto) && file_exists($user_foto)) {
-            unlink($user_foto);
-        }
-        // Bersihkan data di tabel PostgreSQL
+        // Cukup hapus di database, Vercel gak butuh perintah unlink
         pg_query($conn, "UPDATE users SET foto_profil = NULL WHERE id = '$user_id'");
         $user_foto = "";
         $success_msg = "Foto profil berhasil dihapus!";
@@ -248,8 +268,8 @@ if (isset($_POST['aksi_foto'])) {
         }
 
         /* =======================================================
-            ANIMASI SHAKE BUAT UPLOAD FOTO & GANTI PASSWORD
-            ======================================================= */
+           ANIMASI SHAKE BUAT UPLOAD FOTO & GANTI PASSWORD
+           ======================================================= */
         @keyframes shakeError {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-5px); }
