@@ -1,5 +1,6 @@
 <?php
-// --- KONFIGURASI SESI AGAR AWET DI SERVERLESS ---
+// --- WAJIB UNTUK VERCEL: SIMPAN SESSION DI /tmp ---
+ini_set('session.save_path', '/tmp');
 ini_set('session.cookie_path', '/');
 ini_set('session.cookie_secure', 'On'); 
 ini_set('session.cookie_httponly', 'On');
@@ -8,14 +9,16 @@ ini_set('session.cookie_samesite', 'Lax');
 session_start();
 include 'koneksi.php'; 
 
-// --- LOGIKA AUTO-LOGIN (TETAP ADA) ---
+// --- LOGIKA AUTO-LOGIN ---
 if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && isset($_COOKIE['token_aman'])) {
-    $cookie_no_induk = $_COOKIE['ingat_nomor_induk'];
+    $cookie_no_induk = pg_escape_string($conn, $_COOKIE['ingat_nomor_induk']);
     $cookie_token    = $_COOKIE['token_aman'];
-    if ($cookie_token === hash('sha256', $cookie_no_induk)) {
-        $q_cek = pg_query($conn, "SELECT * FROM users WHERE nomor_induk = '$cookie_no_induk'");
-        if (pg_num_rows($q_cek) > 0) {
-            $data = pg_fetch_assoc($q_cek);
+    
+    // Cek database
+    $q_cek = pg_query($conn, "SELECT * FROM users WHERE nomor_induk = '$cookie_no_induk'");
+    if (pg_num_rows($q_cek) > 0) {
+        $data = pg_fetch_assoc($q_cek);
+        if ($cookie_token === hash('sha256', $data['nomor_induk'])) {
             $_SESSION['logged_in']    = true;
             $_SESSION['user_id']      = $data['id'];
             $_SESSION['no_induk']     = $data['nomor_induk'];
@@ -25,7 +28,7 @@ if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && is
     }
 }
 
-// --- PENGAMANAN HALAMAN ---
+// --- PENGAMANAN HALAMAN DASHBOARD ---
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header("Location: login.php"); 
     exit;
