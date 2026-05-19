@@ -1,5 +1,6 @@
 <?php
-// --- KONFIGURASI SESI AGAR AWET DI SERVERLESS VERCEL ---
+// --- WAJIB UNTUK VERCEL: SIMPAN SESSION DI /tmp ---
+ini_set('session.save_path', '/tmp');
 ini_set('session.cookie_path', '/');
 ini_set('session.cookie_secure', 'On'); 
 ini_set('session.cookie_httponly', 'On');
@@ -8,13 +9,11 @@ ini_set('session.cookie_samesite', 'Lax');
 session_start();
 include 'koneksi.php';
 
-// --- LOGIKA CEK SESSION (JANGAN DI-REDIRECT KALAU SUDAH DI SINI) ---
 // Kita cuma redirect kalau dia mau akses halaman login TAPI dia sudah login
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header("Location: input.php"); // FIX: Balik ke input.php
+    header("Location: input.php");
     exit;
 }
-
 // 1. CEK COOKIE UNTUK AUTO LOGIN
 if (!isset($_SESSION['logged_in']) && isset($_COOKIE['ingat_nomor_induk']) && isset($_COOKIE['token_aman'])) {
     $no_induk_cookie = pg_escape_string($conn, $_COOKIE['ingat_nomor_induk']);
