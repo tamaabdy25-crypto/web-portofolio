@@ -56,10 +56,29 @@ $tanggal_join = (isset($user['created_at']) && !empty($user['created_at']) && $u
 // =========================================================================
 // KUNCI BRANKAS SUPABASE LU (WAJIB DIISI!)
 // =========================================================================
-$supabase_url = "https://psskhwflnkyzzhdtxdku.supabase.co"; // Ganti pake: https://psskhwflnkyzzhdtxdku.supabase.co
-$supabase_key = "sb_secret_" . "9aoyVHQqFyk4sUVf2gRyIQ_bAhRCHsB";     // Ganti pake: sb_publishable_...
+$supabase_url = "https://psskhwflnkyzzhdtxdku.supabase.co"; // Ganti pake URL project Supabase lu
+$supabase_key = "sb_secret_" . "9aoyVHQqFyk4sUVf2gRyIQ_bAhRCHsB"; // Trik ninja GitHub, sambungin sisa kuncinya di sini
 $bucket_name  = "evision-storage";
 // =========================================================================
+
+// --- FUNGSI PENGHANCUR FILE DI SUPABASE ---
+function hapusFileSupabase($url_file, $supabase_url, $supabase_key, $bucket_name) {
+    if (!empty($url_file)) {
+        $file_name = basename($url_file); 
+        $delete_url = $supabase_url . "/storage/v1/object/" . $bucket_name . "/" . $file_name;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $delete_url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer " . $supabase_key,
+            "apikey: " . $supabase_key
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+}
+// ------------------------------------------
 
 // ==============================================================
 // BLOK AKSI UPLOAD / HAPUS FOTO PROFIL (VIA SUPABASE API)
@@ -81,6 +100,9 @@ if (isset($_POST['aksi_foto'])) {
         } else if ($file_size > 2097152) { // Batas 2MB = 2097152 bytes
             $error_msg = "Ukuran foto maksimal 2MB!";
         } else {
+            // 💡 HAPUS FOTO LAMA DI SUPABASE SEBELUM UPLOAD YANG BARU
+            hapusFileSupabase($user_foto, $supabase_url, $supabase_key, $bucket_name);
+
             // Beri nama file unik (ID user + waktu)
             $nama_unik = "profil_" . $user_id . "_" . time() . "." . $file_ext;
             
@@ -121,6 +143,9 @@ if (isset($_POST['aksi_foto'])) {
         }
     } 
     else if ($jenis_aksi === 'hapus') {
+        // 💡 HAPUS FOTO FISIK DI SUPABASE DULU SEBELUM DATABASE DI-NOL-KAN
+        hapusFileSupabase($user_foto, $supabase_url, $supabase_key, $bucket_name);
+
         // Cukup hapus di database, Vercel gak butuh perintah unlink
         pg_query($conn, "UPDATE users SET foto_profil = NULL WHERE id = '$user_id'");
         $user_foto = "";
