@@ -71,7 +71,25 @@ $user_foto = $data_user['foto_profil'] ?? "";
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --theme-primary: #10b981; }
-        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #334155; transition: background 0.5s ease; background-attachment: fixed; background-size: cover; background-position: center; margin: 0; }
+        
+        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #334155; margin: 0; }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
+            z-index: -99;
+            background-color: #f8f9fa;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background 0.5s ease;
+        }
+
         .page-overlay { background: rgba(255, 255, 255, 0.2); min-height: 100vh; display: flex; flex-direction: column; width: 100%; }
         .navbar { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); border-bottom: 2px solid #e2e8f0; padding: 15px 0; }        
         .dynamic-logo { height: 28px; width: 100px; background-color: var(--theme-primary); -webkit-mask: url('logo_evision1.png') no-repeat left center; -webkit-mask-size: contain; mask: url('logo_evision1.png') no-repeat left center; mask-size: contain; transition: background-color 0.5s ease; }
@@ -130,7 +148,9 @@ $user_foto = $data_user['foto_profil'] ?? "";
             display: none; 
         }
     </style>
-    <style><?php if(!empty($user_wallpaper)): ?>body { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }<?php endif; ?></style>
+    
+    <style><?php if(!empty($user_wallpaper)): ?>body::before { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }<?php endif; ?></style>
+    
     <script>
         const currentWp = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
         const savedWp = localStorage.getItem('evision_wp_final');
@@ -425,7 +445,7 @@ function resetTema() {
 // KODE SAKTI ANTI-CACHE WAKTU FETCH TABEL
 // ==========================================
 function loadTabelUser() {
-    fetch('api_dashboard.php?nocache=' + new Date().getTime(), { cache: 'no-store' }) // <-- INI TAMBAHANNYA BOSKU
+    fetch('api_dashboard.php?nocache=' + new Date().getTime(), { cache: 'no-store' })
     .then(response => response.json())
     .then(res => {
         if(res.status !== 'success') return;
@@ -456,7 +476,6 @@ function loadTabelUser() {
                 
                 if (row.status_berjalan === 'mendatang') {
                     statusBadge = `<span class="status-badge" style="background:#f1f5f9; color:#64748b; font-size:10px; padding:4px 10px; border-radius:10px; font-weight:700;">MENDATANG</span>`;
-                    // 💡 PERBAIKAN: Tambahin type="button" dan event.preventDefault() biar Enter nggak ngelag!
                     btnAksi = `
                         <button type="button" onclick="event.preventDefault(); bukaEdit('${row.id}', '${safeTitle}', '${row.room_name}', '${row.meeting_date}', '${row.start_time}', '${row.end_time}', '${encodeURIComponent(row.peserta || '')}')" style="background:none; border:none; color:#f59e0b; padding:0; margin-right:8px;" title="Edit Jadwal"><i class="bi bi-pencil-square fs-5"></i></button>
                         <button type="button" onclick="event.preventDefault(); aksiEksekusi('hapus', '${row.id}', 'Hapus Agenda?', 'Data yang dihapus tidak bisa dikembalikan!', '#ef4444', 'Ya, Hapus')" style="background:none; border:none; color:#ef4444; padding:0;" title="Hapus Jadwal"><i class="bi bi-trash fs-5"></i></button>
@@ -575,7 +594,6 @@ function simpanData(event, tipeAksi) {
             form.reset();
             if(tipeAksi === 'tambah') $('#pilih_peserta').val(null).trigger('change'); 
             if(tipeAksi === 'edit') $('#edit_peserta').val(null).trigger('change'); 
-            // 💡 PERBAIKAN: Modal sukses otomatis hilang dalam 1.5 detik
             Swal.fire({ icon: 'success', title: data.pesan, showConfirmButton: false, timer: 1500 });
             loadTabelUser(); 
         } else {
@@ -601,7 +619,6 @@ function aksiEksekusi(tipeAksi, idJadwal, judul, pesan, warnaTombol, teksTombol)
         confirmButtonText: teksTombol
     }).then((result) => {
         if (result.isConfirmed) {
-            // 💡 PERBAIKAN: Langsung munculin tulisan "Memproses..." tanpa nunggu/freeze sedetik pun!
             Swal.fire({
                 title: 'Memproses...',
                 allowOutsideClick: false,
@@ -617,7 +634,6 @@ function aksiEksekusi(tipeAksi, idJadwal, judul, pesan, warnaTombol, teksTombol)
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // 💡 PERBAIKAN: Modal sukses otomatis hilang dalam 1.5 detik
                     Swal.fire({ icon: 'success', title: data.pesan, showConfirmButton: false, timer: 1500 });
                     loadTabelUser();
                 } else {
