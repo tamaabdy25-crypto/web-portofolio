@@ -9,11 +9,5 @@
       "src": "/(.*)",
       "dest": "/api/$1"
     }
-  ],
-  "crons": [
-    {
-      "path": "/cron_email.php",
-      "schedule": "* * * * *"
-    }
   ]
 }
