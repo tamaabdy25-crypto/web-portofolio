@@ -38,7 +38,7 @@ if (file_exists($jalur_dalam)) {
 // ⚠️ BAGIAN WAJIB LU UBAH ⚠️
 // ==========================================
 $email_robot    = "pengelola.evision@gmail.com"; 
-$password_robot = "**********"; // <-- INGET PASSWORD LU JANGAN LUPA DIISI LAGI YA!
+$password_robot = "cmozgaxoxqrajrii"; // <-- INGET PASSWORD LU JANGAN LUPA DIISI LAGI YA!
 $nama_pengirim  = "E-VISION";
 // ==========================================
 
