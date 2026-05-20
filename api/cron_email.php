@@ -38,7 +38,7 @@ if (file_exists($jalur_dalam)) {
 // ⚠️ BAGIAN WAJIB LU UBAH ⚠️
 // ==========================================
 $email_robot    = "pengelola.evision@gmail.com"; 
-$password_robot = "*cmozgaxoxqrajrii"; // <-- INGET PASSWORD LU JANGAN LUPA DIISI LAGI YA!
+$password_robot = "**********"; // <-- INGET PASSWORD LU JANGAN LUPA DIISI LAGI YA!
 $nama_pengirim  = "E-VISION";
 // ==========================================
 
@@ -74,14 +74,16 @@ $log_aktivitas = "";
 // ==========================================
 // MESIN 1: KIRIM EMAIL UNDANGAN BARU
 // ==========================================
+// FIX BOOLEAN: Ubah 0 jadi FALSE
 $q_undangan = pg_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m.title, m.room_name, m.meeting_date, m.start_time, m.end_time, m.nama_pengusul 
     FROM agenda_peserta ap 
     JOIN users u ON ap.id_user = u.id 
     JOIN meetings m ON ap.id_agenda = m.id 
-    WHERE ap.email_terkirim_undangan = 0 AND u.email IS NOT NULL AND u.email != ''");
+    WHERE ap.email_terkirim_undangan = FALSE AND u.email IS NOT NULL AND u.email != ''");
 
 while ($row = pg_fetch_assoc($q_undangan)) {
-    pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = 1 WHERE id = '{$row['id_ap']}'");
+    // FIX BOOLEAN: Ubah 1 jadi TRUE
+    pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = TRUE WHERE id = '{$row['id_ap']}'");
 
     $subjek = "Undangan Meeting: " . $row['title'];
     $pesan = "
@@ -104,7 +106,8 @@ while ($row = pg_fetch_assoc($q_undangan)) {
     if (kirimEmail($row['email'], $row['nama_lengkap'], $subjek, $pesan)) {
         $log_aktivitas .= "<div class='mb-2 text-success fw-bold'><i class='bi bi-check-circle-fill me-2'></i>Undangan terkirim ke: <span class='text-dark'>{$row['email']}</span></div>";
     } else {
-        pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = 0 WHERE id = '{$row['id_ap']}'");
+        // FIX BOOLEAN: Ubah 0 jadi FALSE
+        pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = FALSE WHERE id = '{$row['id_ap']}'");
         $log_aktivitas .= "<div class='mb-2 text-danger fw-bold'><i class='bi bi-x-circle-fill me-2'></i>Gagal kirim undangan ke: <span class='text-dark'>{$row['email']}</span></div>";
     }
 }
@@ -112,17 +115,19 @@ while ($row = pg_fetch_assoc($q_undangan)) {
 // ==========================================
 // MESIN 2: KIRIM EMAIL PENGINGAT (5 Menit Sebelum Mulai)
 // ==========================================
+// FIX BOOLEAN: Ubah 0 jadi FALSE
 $q_pengingat = pg_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m.title, m.room_name, m.start_time, m.end_time 
     FROM agenda_peserta ap 
     JOIN users u ON ap.id_user = u.id 
     JOIN meetings m ON ap.id_agenda = m.id 
-    WHERE ap.email_terkirim_pengingat = 0 
+    WHERE ap.email_terkirim_pengingat = FALSE 
     AND m.meeting_date = CURRENT_DATE
     AND TO_TIMESTAMP(m.meeting_date || ' ' || m.start_time, 'YYYY-MM-DD HH24:MI:SS') BETWEEN NOW() AND NOW() + INTERVAL '5 minutes'
     AND u.email IS NOT NULL AND u.email != ''");
 
 while ($row = pg_fetch_assoc($q_pengingat)) {
-    pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = 1 WHERE id = '{$row['id_ap']}'");
+    // FIX BOOLEAN: Ubah 1 jadi TRUE
+    pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = TRUE WHERE id = '{$row['id_ap']}'");
 
     $subjek = "PENGINGAT: Meeting '{$row['title']}' Segera Dimulai!";
     $pesan = "
@@ -145,25 +150,23 @@ while ($row = pg_fetch_assoc($q_pengingat)) {
     if (kirimEmail($row['email'], $row['nama_lengkap'], $subjek, $pesan)) {
         $log_aktivitas .= "<div class='mb-2 text-warning fw-bold'><i class='bi bi-alarm-fill me-2'></i>Pengingat terkirim ke: <span class='text-dark'>{$row['email']}</span></div>";
     } else {
-        pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = 0 WHERE id = '{$row['id_ap']}'");
+        // FIX BOOLEAN: Ubah 0 jadi FALSE
+        pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = FALSE WHERE id = '{$row['id_ap']}'");
     }
 }
 
 // ==========================================
 // MESIN 3: KIRIM EMAIL PEMBATALAN DARI ANTREAN
 // ==========================================
+// Catatan: Kolom `status` di tabel `antrean_email` pakai tipe INT, jadi 0 dan 1 aman dan gak perlu diubah.
 $q_batal = pg_query($conn, "SELECT * FROM antrean_email WHERE status = 0");
 while ($row = pg_fetch_assoc($q_batal)) {
-    // Kunci data biar nggak double spam!
     pg_query($conn, "UPDATE antrean_email SET status = 1 WHERE id = '{$row['id']}'");
     
-    // Eksekusi ngirim suratnya
     if (kirimEmail($row['email_tujuan'], $row['nama_tujuan'], $row['subjek'], $row['pesan_html'])) {
-        // Kalau sukses kekirim, datanya langsung dihancurkan biar database lu ga penuh!
         pg_query($conn, "DELETE FROM antrean_email WHERE id = '{$row['id']}'");
         $log_aktivitas .= "<div class='mb-2 text-danger fw-bold'><i class='bi bi-trash-fill me-2'></i>Pembatalan terkirim ke: <span class='text-dark'>{$row['email_tujuan']}</span></div>";
     } else {
-        // Kalau gagal, balikin statusnya biar besok dikirim lagi
         pg_query($conn, "UPDATE antrean_email SET status = 0 WHERE id = '{$row['id']}'");
     }
 }
