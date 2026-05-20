@@ -24,6 +24,9 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>E-VISION - Kalender Agenda</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -36,14 +39,27 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
 
+        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
         body { 
             background-color: #f1f5f9; 
             font-family: 'Inter', sans-serif; 
-            transition: background 0.5s ease;
-            background-attachment: fixed;
+            margin: 0; 
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
+            z-index: -99;
+            background-color: #f1f5f9;
             background-size: cover;
             background-position: center;
-            margin: 0; 
+            background-repeat: no-repeat;
+            transition: background 0.5s ease;
         }
 
         .page-overlay {
@@ -219,11 +235,11 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
     </style>
     
     <style>
-        /* Terapkan Background PHP instan */
         <?php if(!empty($user_wallpaper)): ?>
-        body { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }
+        body::before { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }
         <?php endif; ?>
     </style>
+    
     <script>
         // Terapkan Tema Warna Instan
         const currentWp = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
@@ -287,16 +303,16 @@ if (wallpaperPath) {
     }
 }
 
-// --- INISIALISASI FULLCALENDAR JS (VERSI API FETCH) ---
+// --- INISIALISASI FULLCALENDAR JS (VERSI API FETCH ANTI CACHE) ---
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var isMobile = window.innerWidth < 768;
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        timeZone: 'Asia/Jakarta', // 2. TAMBAHAN: Paksa JS ngikut zona waktu Asia/Jakarta
-        now: '<?php echo date("Y-m-d"); ?>', // 3. TAMBAHAN: Sinkronkan hari ini sama mesin PHP
+        timeZone: 'Asia/Jakarta', 
+        now: '<?php echo date("Y-m-d"); ?>', 
         initialView: isMobile ? 'listMonth' : 'dayGridMonth', 
-        locale: 'id', // Set Bahasa Indonesia
+        locale: 'id', 
         height: 'auto',
         displayEventTime: false,
         headerToolbar: {
@@ -314,7 +330,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // MENGAMBIL DATA DARI API LOKAL (api_kalender.php)
         // ==============================================================
         events: function(info, successCallback, failureCallback) {
-            fetch('api_kalender.php')
+            let timestamp = new Date().getTime(); // 💡 Bumbu anti-cache biar fetch gak malas
+            
+            fetch(`api_kalender.php?nocache=${timestamp}`, { cache: 'no-store' }) // <-- KUNCI SAKTI DI SINI
                 .then(response => response.json())
                 .then(hasil => {
                     if (hasil.status === 'success') {
