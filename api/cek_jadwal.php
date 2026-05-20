@@ -1,8 +1,16 @@
 <?php
+// ==========================================
+// OBAT ANTI-CACHE TINGKAT DEWA (PHP HEADER)
+// ==========================================
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+
 session_start();
 include 'koneksi.php';
 
-if (!isset($_SESSION['logged_in'])) {
+if (!isset($_SESSION['user_id'])) { // Perbaikan variabel session dari logged_in ke user_id (Biar seragam)
     header("Location: login.php");
     exit;
 }
@@ -22,6 +30,9 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>E-VISION - Eksplorasi Jadwal</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -184,12 +195,14 @@ if (wallpaperPath) {
 }
 
 // ==============================================================
-// MESIN API: LOAD JADWAL 30 HARI & PAGINATION
+// MESIN API: LOAD JADWAL 30 HARI & PAGINATION (ANTI CACHE)
 // ==============================================================
 let currentHal = new URLSearchParams(window.location.search).get('hal') || 1;
 
 function loadJadwalIntip(hal = 1) {
-    fetch(`api_intip.php?hal=${hal}`)
+    let timestamp = new Date().getTime(); // Tambah bumbu nocache
+    
+    fetch(`api_intip.php?hal=${hal}&nocache=${timestamp}`, { cache: 'no-store' }) // <-- KUNCI SAKTI ANTI CACHE
     .then(r => r.json())
     .then(res => {
         if(res.status !== 'success') return;
