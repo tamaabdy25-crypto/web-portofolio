@@ -10,7 +10,7 @@ header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
 session_start();
 include 'koneksi.php';
 
-if (!isset($_SESSION['user_id'])) { // Perbaikan variabel session dari logged_in ke user_id (Biar seragam)
+if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
@@ -21,8 +21,6 @@ $my_id = $_SESSION['user_id'] ?? 0;
 $q_theme = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
 $data_theme = pg_fetch_assoc($q_theme);
 $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
-
-// LOGIKA DATABASE SUDAH DIPINDAH KE api_intip.php
 ?>
 
 <!DOCTYPE html>
@@ -42,14 +40,27 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
 
+        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
         body { 
             background-color: #f1f5f9; 
             font-family: 'Inter', sans-serif; 
-            transition: background 0.5s ease;
-            background-attachment: fixed;
+            margin: 0; 
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
+            z-index: -99;
+            background-color: #f1f5f9;
             background-size: cover;
             background-position: center;
-            margin: 0; 
+            background-repeat: no-repeat;
+            transition: background 0.5s ease;
         }
 
         .page-overlay { background: rgba(255, 255, 255, 0.2); min-height: 100vh; display: flex; flex-direction: column; width: 100%; }
@@ -103,7 +114,7 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
     
     <style>
         <?php if(!empty($user_wallpaper)): ?>
-        body { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }
+        body::before { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }
         <?php endif; ?>
     </style>
     
@@ -185,9 +196,6 @@ if (wallpaperPath) {
             if (brightness > 180) { r = 30; g = 41; b = 59; }
             const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
             document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
-            
-            // Hapus CSS JS-injector lama karena kita udah pake variabel CSS --theme-primary
-            
             localStorage.setItem('evision_wp_final', wallpaperPath);
             localStorage.setItem('evision_color_final', dynamicRGB);
         };
@@ -224,7 +232,7 @@ function loadJadwalIntip(hal = 1) {
                 let safeTitle = row.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 let safePengusul = row.nama_pengusul.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-                // Cek apakah API ngirim `start_time` atau `jam_mulai`. Kalau dua-duanya ga ada, isi '00:00'.
+                // Cek apakah API ngirim `start_time` atau `jam_mulai`.
                 let waktuMulai = row.start_time || row.jam_mulai || '00:00';
                 let waktuSelesai = row.end_time || row.jam_selesai || '00:00';
 
