@@ -1,4 +1,12 @@
 <?php
+// ==========================================
+// OBAT ANTI-CACHE TINGKAT DEWA (PHP HEADER)
+// ==========================================
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+
 session_start();
 include 'koneksi.php';
 
@@ -48,6 +56,9 @@ $user_foto = $data_user['foto_profil'] ?? "";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>E-VISION - Dashboard</title>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -410,8 +421,11 @@ function resetTema() {
     });
 }
 
+// ==========================================
+// KODE SAKTI ANTI-CACHE WAKTU FETCH TABEL
+// ==========================================
 function loadTabelUser() {
-    fetch('api_dashboard.php?nocache=' + new Date().getTime())
+    fetch('api_dashboard.php?nocache=' + new Date().getTime(), { cache: 'no-store' }) // <-- INI TAMBAHANNYA BOSKU
     .then(response => response.json())
     .then(res => {
         if(res.status !== 'success') return;
