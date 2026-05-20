@@ -15,15 +15,30 @@ pg_query($conn, "SET TIME ZONE 'Asia/Jakarta'");
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require 'PHPMailer/src/Exception.php';
-require 'PHPMailer/src/PHPMailer.php';
-require 'PHPMailer/src/SMTP.php';
+// ==========================================
+// KODE SAKTI: AUTO-DETECT ALAMAT PHPMAILER 
+// ==========================================
+$jalur_dalam = __DIR__ . '/PHPMailer/src/Exception.php';
+$jalur_luar  = __DIR__ . '/../PHPMailer/src/Exception.php';
+
+if (file_exists($jalur_dalam)) {
+    require __DIR__ . '/PHPMailer/src/Exception.php';
+    require __DIR__ . '/PHPMailer/src/PHPMailer.php';
+    require __DIR__ . '/PHPMailer/src/SMTP.php';
+} elseif (file_exists($jalur_luar)) {
+    require __DIR__ . '/../PHPMailer/src/Exception.php';
+    require __DIR__ . '/../PHPMailer/src/PHPMailer.php';
+    require __DIR__ . '/../PHPMailer/src/SMTP.php';
+} else {
+    die("Error Gawat: Folder PHPMailer ilang Bosku! Pastiin folder 'PHPMailer' udah lu push ke GitHub ya!");
+}
+// ==========================================
 
 // ==========================================
 // ⚠️ BAGIAN WAJIB LU UBAH ⚠️
 // ==========================================
 $email_robot    = "pengelola.evision@gmail.com"; 
-$password_robot = "cmozgaxoxqrajrii"; 
+$password_robot = "*cmozgaxoxqrajrii"; // <-- INGET PASSWORD LU JANGAN LUPA DIISI LAGI YA!
 $nama_pengirim  = "E-VISION";
 // ==========================================
 
