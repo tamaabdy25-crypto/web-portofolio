@@ -736,19 +736,6 @@ $(document).ready(function() {
     });
 });
 
-// ==========================================
-// ROBOT EMAIL VIRTUAL (JALAN TIAP 10 DETIK)
-// ==========================================
-function jalankanBotEmail() {
-    fetch('cron_email.php')
-    .then(response => response.text())
-    .then(data => { console.log("Status Bot Email: Sedang memantau jadwal..."); })
-    .catch(error => console.error("Bot Email Error:", error));
-}
-
-jalankanBotEmail();
-setInterval(jalankanBotEmail, 10000);
-
     // --- SATPAM FRONTEND BUAT UPLOAD TEMA (7MB) ---
 const formTema = document.getElementById('formTema'); 
 const inputWallpaper = document.getElementById('input-wallpaper'); 
