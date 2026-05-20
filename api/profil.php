@@ -57,7 +57,7 @@ $tanggal_join = (isset($user['created_at']) && !empty($user['created_at']) && $u
 // KUNCI BRANKAS SUPABASE LU (WAJIB DIISI!)
 // =========================================================================
 $supabase_url = "https://psskhwflnkyzzhdtxdku.supabase.co"; // Ganti pake: https://psskhwflnkyzzhdtxdku.supabase.co
-$supabase_key = "sb_secret_" "9aoyVHQqFyk4sUVf2gRyIQ_bAhRCHsB";     // Ganti pake: sb_publishable_...
+$supabase_key = "sb_secret_" . "9aoyVHQqFyk4sUVf2gRyIQ_bAhRCHsB";     // Ganti pake: sb_publishable_...
 $bucket_name  = "evision-storage";
 // =========================================================================
 
