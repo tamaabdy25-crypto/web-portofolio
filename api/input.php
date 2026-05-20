@@ -734,6 +734,49 @@ function jalankanBotEmail() {
 
 jalankanBotEmail();
 setInterval(jalankanBotEmail, 10000);
+
+    // --- SATPAM FRONTEND BUAT UPLOAD TEMA (7MB) ---
+// Sesuaikan nama ID 'formTema' dan 'input-wallpaper' sama kodingan HTML lu ya!
+const formTema = document.getElementById('formTema'); // Form modal tema
+const inputWallpaper = document.getElementById('input-wallpaper'); // Input filenya
+
+if (formTema && inputWallpaper) {
+    formTema.addEventListener('submit', function(e) {
+        const file = inputWallpaper.files[0];
+
+        if (file) {
+            if (file.size > 7340032) { // 7MB = 7340032 bytes
+                e.preventDefault(); // Stop form dari refresh/upload
+                
+                // Cari atau bikin elemen pesan error
+                let errorMsg = document.getElementById('error-tema-size');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('div');
+                    errorMsg.id = 'error-tema-size';
+                    errorMsg.className = 'text-error-shake fw-bold text-start mb-2';
+                    errorMsg.style.color = '#ef4444';
+                    errorMsg.style.fontSize = '13px';
+                    errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Gagal: Ukuran wallpaper maksimal 7MB!';
+                    inputWallpaper.parentNode.insertBefore(errorMsg, inputWallpaper.nextSibling);
+                }
+                
+                errorMsg.style.display = 'block'; 
+                
+                // Animasi Shake!
+                inputWallpaper.classList.remove('shake-animation');
+                void inputWallpaper.offsetWidth; // Trigger ulang animasi
+                inputWallpaper.classList.add('shake-animation');
+            }
+        }
+    });
+
+    // Ngilangin pesan error kalau user ganti foto lain
+    inputWallpaper.addEventListener('change', function() {
+        const errorMsg = document.getElementById('error-tema-size');
+        if (errorMsg) errorMsg.style.display = 'none';
+        this.classList.remove('shake-animation'); 
+    });
+}
 </script>
 </body>
 </html>
