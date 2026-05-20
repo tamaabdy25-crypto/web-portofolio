@@ -52,8 +52,18 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 
         .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); z-index: 100; padding: 20px 0; border-bottom: 2px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }        
         .card { border: none; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); background: rgba(255, 255, 255, 0.95) !important; }
-        .btn-outline-info { color: #0ea5e9; border-color: #0ea5e9; }
-        .btn-outline-info:hover { background-color: #0ea5e9; color: white; }
+        
+        /* --- 💡 CSS BARU UNTUK TOMBOL KEMBALI --- */
+        .btn-back-custom { 
+            color: var(--theme-primary); 
+            border: 2px solid var(--theme-primary); 
+            background-color: transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-back-custom:hover { 
+            background-color: var(--theme-primary); 
+            color: white !important; 
+        }
         
         .table thead { background-color: var(--theme-primary); color: white; }
         .table td, .table th { color: #000000 !important; white-space: nowrap; vertical-align: middle;} 
@@ -102,7 +112,7 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
             <div class="dynamic-logo" aria-label="E-VISION"></div>
             <span class="text-secondary fw-normal ms-2 border-start ps-2 header-title-text" style="font-size: 18px;">Eksplorasi Jadwal</span>
         </div>
-        <a href="input.php" class="btn btn-outline-info btn-sm px-3 rounded-pill shadow-sm fw-bold" style="color: var(--theme-primary); border-color: var(--theme-primary);">
+        <a href="input.php" class="btn btn-back-custom btn-sm px-3 rounded-pill shadow-sm fw-bold">
             <i class="bi bi-arrow-left me-1"></i> Kembali
         </a>
     </div>
@@ -165,19 +175,12 @@ if (wallpaperPath) {
             const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
             document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
             
-            // Hover state untuk tombol kembali
-            let style = document.createElement('style');
-            style.innerHTML = `.btn-outline-info:hover { background-color: ${dynamicRGB} !important; border-color: ${dynamicRGB} !important; color: white !important; }`;
-            document.head.appendChild(style);
-
+            // Hapus CSS JS-injector lama karena kita udah pake variabel CSS --theme-primary
+            
             localStorage.setItem('evision_wp_final', wallpaperPath);
             localStorage.setItem('evision_color_final', dynamicRGB);
         };
-    } else {
-        let style = document.createElement('style');
-        style.innerHTML = `.btn-outline-info:hover { background-color: ${savedColor} !important; border-color: ${savedColor} !important; color: white !important; }`;
-        document.head.appendChild(style);
-    }
+    } 
 }
 
 // ==============================================================
@@ -208,7 +211,6 @@ function loadJadwalIntip(hal = 1) {
                 let safeTitle = row.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 let safePengusul = row.nama_pengusul.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-                // 💡 JURUS SAPU JAGAT ANTI-UNDEFINED
                 // Cek apakah API ngirim `start_time` atau `jam_mulai`. Kalau dua-duanya ga ada, isi '00:00'.
                 let waktuMulai = row.start_time || row.jam_mulai || '00:00';
                 let waktuSelesai = row.end_time || row.jam_selesai || '00:00';
