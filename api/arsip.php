@@ -1,4 +1,12 @@
 <?php
+// ==========================================
+// OBAT ANTI-CACHE TINGKAT DEWA (PHP HEADER)
+// ==========================================
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+
 include 'koneksi.php';
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
@@ -24,6 +32,9 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>E-VISION - Arsip</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -209,7 +220,7 @@ if (wallpaperPath) {
             let r = color[0], g = color[1], b = color[2];
             let brightness = (r * 299 + g * 587 + b * 114) / 1000;
             if (brightness > 180) { r = 30; g = 41; b = 59; }
-            const dynamicRGB = `rgb(${r}, g, b)`;
+            const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
             document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
             localStorage.setItem('evision_wp_final', wallpaperPath);
             localStorage.setItem('evision_color_final', dynamicRGB);
@@ -218,15 +229,17 @@ if (wallpaperPath) {
 }
 
 // ==============================================================
-// LOAD ARSIP & MEMORI SEMENTARA
+// LOAD ARSIP & MEMORI SEMENTARA (DENGAN ANTI-CACHE)
 // ==============================================================
 let currentHal = new URLSearchParams(window.location.search).get('hal') || 1;
 let globalDataArsip = []; 
 
 function loadArsip(hal = 1, isPrint = false) {
-    let urlAPI = isPrint ? `api_arsip.php?print=semua` : `api_arsip.php?hal=${hal}`;
+    // 💡 PERBAIKAN: Tambahin bumbu "nocache" biar HP nggak males nginget data lama
+    let timestamp = new Date().getTime();
+    let urlAPI = isPrint ? `api_arsip.php?print=semua&nocache=${timestamp}` : `api_arsip.php?hal=${hal}&nocache=${timestamp}`;
 
-    fetch(urlAPI).then(r => r.json()).then(res => {
+    fetch(urlAPI, { cache: 'no-store' }).then(r => r.json()).then(res => { // <-- KUNCI SAKTI ANTI CACHE FETCH DI SINI
         if(res.status !== 'success') return;
         
         // Simpan data API ke memori global Javascript
