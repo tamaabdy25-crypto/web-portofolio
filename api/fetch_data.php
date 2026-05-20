@@ -1,4 +1,4 @@
-<?php
+<?php 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -13,10 +13,10 @@ $my_role = $_SESSION['role'] ?? 'karyawan';
 date_default_timezone_set('Asia/Jakarta');
 pg_query($conn, "SET TIME ZONE 'Asia/Jakarta'");
 
-// 3. LOGIKA AUTO-ARCHIVE
+// 3. LOGIKA AUTO-ARCHIVE (Diubah ke standar PostgreSQL: 1 jadi TRUE, 0 jadi FALSE)
 pg_query($conn, "UPDATE meetings 
-    SET is_finished = 1 
-    WHERE is_finished = 0 
+    SET is_finished = TRUE 
+    WHERE is_finished = FALSE 
     AND TO_TIMESTAMP(meeting_date || ' ' || end_time, 'YYYY-MM-DD HH24:MI:SS') <= NOW()");
 
 $nowWIB = time(); 
@@ -26,15 +26,15 @@ $limit = 10;
 $halaman = isset($_GET['hal']) ? (int)$_GET['hal'] : 1;
 $offset = ($halaman - 1) * $limit;
 
-// 4. FILTER QUERY CERDAS
+// 4. FILTER QUERY CERDAS (Diubah ke standar PostgreSQL: 0 jadi FALSE)
 if ($is_display) {
     // Mode DISPLAY: Tampilkan SEMUA jadwal hari ini
-    $where_clause = "WHERE meeting_date = CURRENT_DATE AND is_finished = 0";
+    $where_clause = "WHERE meeting_date = CURRENT_DATE AND is_finished = FALSE";
     $order_clause = "ORDER BY start_time ASC";
 } else {
     // Mode DASHBOARD: Cuma munculin jadwal milik sendiri
     if (!$my_id) { exit(); } 
-    $where_clause = "WHERE user_id = '$my_id' AND is_finished = 0";
+    $where_clause = "WHERE user_id = '$my_id' AND is_finished = FALSE";
     $order_clause = "ORDER BY meeting_date ASC, start_time ASC";
 }
 
