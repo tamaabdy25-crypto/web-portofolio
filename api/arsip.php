@@ -42,10 +42,29 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --theme-primary: #10b981; }
-        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #334155; margin: 0; transition: background 0.5s ease; background-attachment: fixed; background-size: cover; background-position: center; }
+        
+        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #334155; margin: 0; }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
+            z-index: -99;
+            background-color: #f8f9fa;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background 0.5s ease;
+        }
+        
         .page-overlay { background: rgba(255, 255, 255, 0.2); min-height: 100vh; display: flex; flex-direction: column; width: 100%; }
         .dynamic-logo { height: 28px; width: 100px; background-color: var(--theme-primary); -webkit-mask: url('logo_evision1.png') no-repeat left center; -webkit-mask-size: contain; mask: url('logo_evision1.png') no-repeat left center; mask-size: contain; transition: background-color 0.5s ease; display: inline-block; vertical-align: middle; }
-.sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); z-index: 100; padding: 20px 0; border-bottom: 2px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }        .card { border: none; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); background: rgba(255, 255, 255, 0.95) !important; }
+        .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); z-index: 100; padding: 20px 0; border-bottom: 2px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }        
+        .card { border: none; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); background: rgba(255, 255, 255, 0.95) !important; }
         .table thead { background-color: var(--theme-primary); color: white; }
         .table td, .table th { color: #000000 !important; white-space: nowrap; vertical-align: middle;} 
         .badge-room { background-color: #e0f2fe; color: #0369a1; font-weight: 700; padding: 5px 10px; border-radius: 8px; font-size: 12px; }
@@ -59,42 +78,11 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         .kop-surat-print h2 { margin: 0; font-weight: bold; font-size: 24px; color: #000; }
         .kop-surat-print p { margin: 5px 0 0 0; font-size: 14px; color: #333; }
 
-        /* =======================================================
-           PERBAIKAN WARNA POP-UP NOTULENSI (BIAR NGILUT TEMA)
-           ======================================================= */
-        .modal-content .text-primary,
-        .modal-content .modal-title,
-        .modal-content .modal-title i {
-            color: var(--theme-primary) !important;
-        }
-
-        .modal-content .btn-primary {
-            background-color: var(--theme-primary) !important;
-            border-color: var(--theme-primary) !important;
-            color: #ffffff !important;
-            transition: all 0.3s ease;
-        }
-
-        .modal-content .btn-primary:hover {
-            opacity: 0.85;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        /* =======================================================
-           PERBAIKAN WARNA TOMBOL POP-UP SWEETALERT (NGIKUT TEMA)
-           ======================================================= */
-        .swal2-styled.swal2-confirm {
-            border-radius: 8px !important;
-            font-weight: bold !important;
-            transition: all 0.3s ease !important;
-        }
-
-        .swal2-styled.swal2-confirm:hover {
-            opacity: 0.85 !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-            background-image: none !important;
-        }
+        .modal-content .text-primary, .modal-content .modal-title, .modal-content .modal-title i { color: var(--theme-primary) !important; }
+        .modal-content .btn-primary { background-color: var(--theme-primary) !important; border-color: var(--theme-primary) !important; color: #ffffff !important; transition: all 0.3s ease; }
+        .modal-content .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .swal2-styled.swal2-confirm { border-radius: 8px !important; font-weight: bold !important; transition: all 0.3s ease !important; }
+        .swal2-styled.swal2-confirm:hover { opacity: 0.85 !important; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; background-image: none !important; }
 
         @media (max-width: 768px) {
             body { padding-bottom: 0 !important; } .page-overlay { padding-bottom: 20px; } .dynamic-logo { height: 22px; width: 85px; } .header-title-text { font-size: 14px !important; } .sticky-header .btn { font-size: 0.85rem !important; padding: 5px 12px !important; } .card { padding: 15px !important; border-radius: 16px !important; min-height: calc(100vh - 120px); display: flex; flex-direction: column; } .card-header-flex { flex-direction: column; align-items: flex-start !important; gap: 15px; } .card h5 { font-size: 1.15rem; margin-bottom: 0 !important;} .table-responsive { flex-grow: 1; border-radius: 8px; box-shadow: inset 0 0 5px rgba(0,0,0,0.05); -webkit-overflow-scrolling: touch; } .table td, .table th { font-size: 0.85rem !important; padding: 10px 12px !important; } .badge-room { font-size: 0.7rem; padding: 4px 8px; } .pagination .page-link { padding: 5px 10px; font-size: 0.85rem; }
@@ -106,7 +94,7 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
     </style>
     <style>
         <?php if(!empty($user_wallpaper)): ?>
-        @media screen { body { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; } }
+        body::before { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }
         <?php endif; ?>
     </style>
     <script>
