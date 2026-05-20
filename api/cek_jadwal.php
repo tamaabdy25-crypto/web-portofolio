@@ -56,7 +56,7 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         /* --- 💡 CSS BARU UNTUK TOMBOL KEMBALI --- */
         .btn-back-custom { 
             color: var(--theme-primary); 
-            border: 2px solid var(--theme-primary); 
+            border: 1px solid var(--theme-primary); 
             background-color: transparent;
             transition: all 0.3s ease;
         }
