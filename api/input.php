@@ -104,6 +104,20 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .dropdown-menu .dropdown-item:hover { background-color: #f1f5f9 !important; color: inherit !important; }
         .dropdown-menu .dropdown-item.text-danger:hover, .dropdown-menu .dropdown-item.text-danger:focus, .dropdown-menu .dropdown-item.text-danger:active { color: #ef4444 !important; background-color: #fee2e2 !important; }
         @media (max-width: 768px) { .header-title-text { font-size: 14px !important; } }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .shake-animation {
+            animation: shakeError 0.4s ease-in-out;
+            border: 2px solid #ef4444 !important; 
+            background-color: #fef2f2 !important;
+        }
+        .text-error-shake {
+            display: none; 
+        }
     </style>
     <style><?php if(!empty($user_wallpaper)): ?>body { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }<?php endif; ?></style>
     <script>
