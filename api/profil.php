@@ -167,13 +167,26 @@ if (isset($_POST['aksi_foto'])) {
     <style>
         :root { --theme-primary: #10b981; }
 
+        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
         body { 
             background-color: #f1f5f9; 
             font-family: 'Inter', sans-serif; 
-            background-attachment: fixed;
+            margin: 0;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
+            z-index: -99;
+            background-color: #f1f5f9;
             background-size: cover;
             background-position: center;
-            margin: 0;
+            background-repeat: no-repeat;
             transition: background 0.5s ease;
         }
 
@@ -337,7 +350,7 @@ if (isset($_POST['aksi_foto'])) {
     <style>
         /* Paksa background langsung muncul pakai PHP, gak nunggu JS */
         <?php if(!empty($user_wallpaper)): ?>
-        body {
+        body::before {
             background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important;
         }
         <?php endif; ?>
