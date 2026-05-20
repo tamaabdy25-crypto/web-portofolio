@@ -8,14 +8,41 @@ $my_id = $_SESSION['user_id'];
 // =========================================================================
 // KUNCI BRANKAS SUPABASE LU (WAJIB DIISI!)
 // =========================================================================
-$supabase_url = "https://psskhwflnkyzzhdtxdku.supabase.co"; // Ganti pake: https://psskhwflnkyzzhdtxdku.supabase.co
-$supabase_key = "sb_secret_" . "9aoyVHQqFyk4sUVf2gRyIQ_bAhRCHsB";     // Ganti pake: sb_publishable_...
+$supabase_url = "https://psskhwflnkyzzhdtxdku.supabase.co"; // Ganti pake URL lu
+$supabase_key = "sb_secret_" . "9aoyVHQqFyk4sUVf2gRyIQ_bAhRCHsB"; // Trik ninja GitHub
 $bucket_name  = "evision-storage";
 // =========================================================================
 
+// --- FUNGSI PENGHANCUR FILE DI SUPABASE ---
+function hapusFileSupabase($url_file, $supabase_url, $supabase_key, $bucket_name) {
+    if (!empty($url_file)) {
+        // Ambil nama file dari ujung URL (contoh: theme_1_123.jpg)
+        $file_name = basename($url_file); 
+        $delete_url = $supabase_url . "/storage/v1/object/" . $bucket_name . "/" . $file_name;
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $delete_url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer " . $supabase_key,
+            "apikey: " . $supabase_key
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+}
+// ------------------------------------------
+
 // --- LOGIKA RESET TEMA ---
 if (isset($_POST['reset_theme'])) {
-    // Kita reset di database aja (gak usah repot hapus file di Supabase dulu biar aman)
+    $cek = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
+    $d = pg_fetch_assoc($cek);
+    
+    // 1. Hapus file fisik di Supabase dulu
+    hapusFileSupabase($d['theme_wallpaper'], $supabase_url, $supabase_key, $bucket_name);
+    
+    // 2. Baru kosongin databasenya
     pg_query($conn, "UPDATE users SET theme_wallpaper = NULL WHERE id = '$my_id'");
     header("Location: input.php?status=reset_sukses");
     exit();
@@ -40,6 +67,12 @@ if (isset($_POST['set_theme'])) {
         echo "<script>alert('Gagal! Ukuran wallpaper kebesaran. Maksimal 7MB ya!'); window.location.href='input.php';</script>";
         exit();
     }
+
+    // --- 💡 HAPUS TEMA LAMA SEBELUM UPLOAD YANG BARU ---
+    $cek_lama = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
+    $data_lama = pg_fetch_assoc($cek_lama);
+    hapusFileSupabase($data_lama['theme_wallpaper'], $supabase_url, $supabase_key, $bucket_name);
+    // ------------------------------------------------
 
     // 3. SIAPIN NAMA FILE BIAR GAK BENTROK
     $nama_unik = "theme_" . $my_id . "_" . time() . "." . $file_ext;
@@ -68,7 +101,7 @@ if (isset($_POST['set_theme'])) {
     curl_close($ch);
 
     // 5. CEK STATUS KIRIMAN
-    if ($http_code == 200) {
+    if ($http_code == 200 || $http_code == 201) { // 💡 Tambahin 201 buat jaga-jaga status Created
         // SUKSES NYAMPE KE SUPABASE! 
         // Sekarang kita ambil link URL Publik-nya biar bisa ditampilin di web
         $public_url = $supabase_url . "/storage/v1/object/public/" . $bucket_name . "/" . $nama_unik;
