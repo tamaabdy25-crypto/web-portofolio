@@ -750,19 +750,32 @@ jalankanBotEmail();
 setInterval(jalankanBotEmail, 10000);
 
     // --- SATPAM FRONTEND BUAT UPLOAD TEMA (7MB) ---
-// Sesuaikan nama ID 'formTema' dan 'input-wallpaper' sama kodingan HTML lu ya!
-const formTema = document.getElementById('formTema'); // Form modal tema
-const inputWallpaper = document.getElementById('input-wallpaper'); // Input filenya
+const formTema = document.getElementById('formTema'); 
+const inputWallpaper = document.getElementById('input-wallpaper'); 
 
 if (formTema && inputWallpaper) {
+    // 1. Kita tangkep tombol submitnya biar bisa kita kendaliin
+    const btnSubmitTema = formTema.querySelector('button[type="submit"]');
+    // 2. Simpan teks aslinya biar bisa dibalikin (misal: "Simpan" atau "Terapkan")
+    const teksAsliBtn = btnSubmitTema ? btnSubmitTema.innerHTML : 'Terapkan';
+
     formTema.addEventListener('submit', function(e) {
         const file = inputWallpaper.files[0];
 
         if (file) {
             if (file.size > 7340032) { // 7MB = 7340032 bytes
-                e.preventDefault(); // Stop form dari refresh/upload
+                // STOP SEMUANYA TERMASUK ANIMASI LOADING LAIN!
+                e.preventDefault(); 
+                e.stopImmediatePropagation(); 
                 
-                // Cari atau bikin elemen pesan error
+                // Balikin tombol kayak semula, cabut efek loading-nya!
+                if (btnSubmitTema) {
+                    btnSubmitTema.innerHTML = teksAsliBtn;
+                    btnSubmitTema.disabled = false;
+                    btnSubmitTema.classList.remove('disabled');
+                }
+
+                // Munculin pesan error kotak merah
                 let errorMsg = document.getElementById('error-tema-size');
                 if (!errorMsg) {
                     errorMsg = document.createElement('div');
@@ -776,19 +789,25 @@ if (formTema && inputWallpaper) {
                 
                 errorMsg.style.display = 'block'; 
                 
-                // Animasi Shake!
+                // Efek getar
                 inputWallpaper.classList.remove('shake-animation');
-                void inputWallpaper.offsetWidth; // Trigger ulang animasi
+                void inputWallpaper.offsetWidth; 
                 inputWallpaper.classList.add('shake-animation');
             }
         }
     });
 
-    // Ngilangin pesan error kalau user ganti foto lain
+    // Kalau user sadar dan ganti foto lain
     inputWallpaper.addEventListener('change', function() {
         const errorMsg = document.getElementById('error-tema-size');
         if (errorMsg) errorMsg.style.display = 'none';
         this.classList.remove('shake-animation'); 
+        
+        // Pastiin tombol bisa diklik normal lagi
+        if (btnSubmitTema) {
+            btnSubmitTema.innerHTML = teksAsliBtn;
+            btnSubmitTema.disabled = false;
+        }
     });
 }
 </script>
