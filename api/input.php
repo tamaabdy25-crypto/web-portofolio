@@ -218,7 +218,10 @@ $user_foto = $data_user['foto_profil'] ?? "";
       <form id="formTema" onsubmit="simpanTema(event)">
           <div class="modal-body pt-3">
               <img id="preview-theme" src="#" alt="Pratinjau Gambar">
-              <p class="small text-muted mb-3"><i class="bi bi-info-circle me-1"></i>Pilih foto HD untuk wallpaper. Jika terang, logo & ikon otomatis menjadi gelap agar terlihat.</p>
+             <p class="small text-muted mb-3">
+    <i class="bi bi-info-circle me-1"></i>Pilih foto HD untuk wallpaper. Jika terang, logo & ikon otomatis menjadi gelap.
+    <strong class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Maksimal ukuran file: 7MB</strong>
+</p>
               <input type="file" name="wallpaper" id="input-wallpaper" class="form-control mb-2" accept="image/*">
           </div>
           <div class="modal-footer border-top-0 pt-0 d-flex justify-content-between">
