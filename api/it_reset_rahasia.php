@@ -24,7 +24,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'IT') {
 $status_msg = "";
 $search = $_GET['search'] ?? '';
 
-// --- LOGIKA HAPUS AKUN ---
+// --- LOGIKA HAPUS AKUN (TETAP SYNCHRONOUS) ---
 if (isset($_POST['hapus_akun'])) {
     $id_user   = $_POST['id_user_hapus'];
 
@@ -43,7 +43,49 @@ if (isset($_POST['hapus_akun'])) {
 }
 
 // ==============================================================
-// 💡 BLOK BARU: LOGIKA EDIT & RESET AKUN (SISTEM AJAX ANTI-LOADING)
+// 💡 BLOK BARU 1: LOGIKA REGISTER AKUN (SISTEM AJAX + SHAKE)
+// ==============================================================
+if (isset($_POST['register_akun_ajax'])) {
+    header('Content-Type: application/json');
+    $no_induk = pg_escape_string($conn, $_POST['no_induk']);
+    $nama     = pg_escape_string($conn, $_POST['nama_lengkap']);
+    $email    = pg_escape_string($conn, $_POST['email']);
+    $pass     = $_POST['password'];
+    $role     = $_POST['role'];
+
+    if (strlen($pass) < 6) {
+        echo json_encode(["status" => "error", "pesan" => "Password minimal 6 karakter bosku!"]);
+        exit;
+    }
+
+    // 1. Cek Duplikat Nomor Induk
+    $cek_nik = pg_query($conn, "SELECT id FROM users WHERE nomor_induk='$no_induk'");
+    if (pg_num_rows($cek_nik) > 0) {
+        echo json_encode(["status" => "error", "pesan" => "Gagal: Nomor Induk sudah terdaftar!"]);
+        exit;
+    }
+
+    // 2. Cek Duplikat Email
+    $cek_email = pg_query($conn, "SELECT id FROM users WHERE email='$email'");
+    if (pg_num_rows($cek_email) > 0) {
+        echo json_encode(["status" => "error", "pesan" => "Gagal: Email sudah digunakan akun lain!"]);
+        exit;
+    }
+
+    // Kalau Aman, Baru Simpan
+    $hashed_pw = password_hash($pass, PASSWORD_DEFAULT);
+    $sql = "INSERT INTO users (nomor_induk, nama_lengkap, email, password, role) 
+            VALUES ('$no_induk', '$nama', '$email', '$hashed_pw', '$role')";            
+    if (pg_query($conn, $sql)) {
+        echo json_encode(["status" => "success", "pesan" => "Akun baru berhasil didaftarkan!"]);
+    } else {
+        echo json_encode(["status" => "error", "pesan" => "Gagal menyimpan ke database!"]);
+    }
+    exit; // Stop render HTML
+}
+
+// ==============================================================
+// 💡 BLOK BARU 2: LOGIKA EDIT & RESET AKUN (SISTEM AJAX + SHAKE)
 // ==============================================================
 if (isset($_POST['edit_akun_ajax'])) {
     header('Content-Type: application/json');
@@ -57,13 +99,19 @@ if (isset($_POST['edit_akun_ajax'])) {
     $q_target = pg_query($conn, "SELECT password FROM users WHERE id='$id_user'");
     $target_user = pg_fetch_assoc($q_target);
 
+    // Cek Duplikat Email untuk User Ini (Jangan sampe nabrak email orang lain)
+    $cek_email_edit = pg_query($conn, "SELECT id FROM users WHERE email='$email' AND id != '$id_user'");
+    if (pg_num_rows($cek_email_edit) > 0) {
+        echo json_encode(["status" => "error", "pesan" => "Gagal: Email ini sudah dipakai akun lain!"]);
+        exit;
+    }
+
     // Kalau kolom password diisi, berarti sekalian ganti password
     if (!empty($pw_custom)) {
         if (strlen($pw_custom) < 6) {
             echo json_encode(["status" => "error", "pesan" => "Password baru minimal 6 karakter bosku!"]);
             exit;
         }
-        // 💡 GEMBOK BARU: Gak boleh sama dengan password target saat ini
         if (password_verify($pw_custom, $target_user['password'])) {
             echo json_encode(["status" => "error", "pesan" => "Kocak! Password reset gak boleh sama persis kayak password dia saat ini!"]);
             exit;
@@ -71,7 +119,6 @@ if (isset($_POST['edit_akun_ajax'])) {
         $hashed_pw = password_hash($pw_custom, PASSWORD_DEFAULT);
         $query_update = "UPDATE users SET nama_lengkap='$nama', email='$email', role='$role', password='$hashed_pw' WHERE id='$id_user'";
     } else {
-        // Kalau kolom password kosong, update nama, email & role aja
         $query_update = "UPDATE users SET nama_lengkap='$nama', email='$email', role='$role' WHERE id='$id_user'";
     }
 
@@ -80,36 +127,9 @@ if (isset($_POST['edit_akun_ajax'])) {
     } else {
         echo json_encode(["status" => "error", "pesan" => "Gagal update ke database!"]);
     }
-    exit; // Stop HTML render, cukup kirim JSON ke JS
+    exit; 
 }
 // ==============================================================
-
-// --- LOGIKA REGISTER AKUN BARU ---
-if (isset($_POST['register_akun'])) {
-    $no_induk = pg_escape_string($conn, $_POST['no_induk']);
-    $nama     = pg_escape_string($conn, $_POST['nama_lengkap']);
-    $email    = pg_escape_string($conn, $_POST['email']);
-    $pass     = $_POST['password'];
-    $role     = $_POST['role'];
-
-    if (strlen($pass) < 6) {
-        $status_msg = "pw_kurang";
-    } else {
-        $cek = pg_query($conn, "SELECT id FROM users WHERE nomor_induk='$no_induk'");
-        if (pg_num_rows($cek) > 0) {
-            $status_msg = "duplikat";
-        } else {
-            $hashed_pw = password_hash($pass, PASSWORD_DEFAULT);
-            $sql = "INSERT INTO users (nomor_induk, nama_lengkap, email, password, role) 
-                    VALUES ('$no_induk', '$nama', '$email', '$hashed_pw', '$role')";            
-            if (pg_query($conn, $sql)) {
-                $status_msg = "sukses_register";
-            } else {
-                $status_msg = "gagal_sistem";
-            }
-        }
-    }
-}
 
 // --- LOGIKA PAGINATION & SEARCH (NAMA ATAU NO INDUK) ---
 $limit = 10; 
@@ -119,7 +139,6 @@ $offset = ($halaman - 1) * $limit;
 $where_clause = "";
 if (!empty($search)) {
     $search_safe = pg_escape_string($conn, $search);
-    // 💡 POSTGRESQL FIX: Menggunakan ILIKE agar pencarian tidak case-sensitive
     $where_clause = " WHERE nomor_induk ILIKE '%$search_safe%' OR nama_lengkap ILIKE '%$search_safe%' OR email ILIKE '%$search_safe%' ";
 }
 
@@ -415,12 +434,12 @@ $query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role
 
 <div class="modal fade" id="modalRegister" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+    <div class="modal-content" id="modalRegisterContent">
       <div class="modal-header modal-header-primary align-items-center">
         <h5 class="modal-title fw-bold m-0"><i class="bi bi-person-plus-fill me-2"></i>Registrasi Akun Baru</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form method="POST">
+      <form id="formRegisterUser" onsubmit="registerAkunAjax(event)">
           <div class="modal-body">
               <div class="mb-3">
                   <label class="form-label">Nomor Induk Karyawan</label>
@@ -447,10 +466,11 @@ $query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role
                       <input type="text" name="password" class="form-control" placeholder="Minimal 6 karakter" minlength="6" required>
                   </div>
               </div>
+              <div id="error-register-container" class="text-center mt-3" style="display: none;"></div>
           </div>
           <div class="modal-footer gap-2">
             <button type="button" class="btn btn-light fw-bold px-4 m-0" data-bs-dismiss="modal" style="border-radius: 10px;">Batal</button>
-            <button type="submit" name="register_akun" class="btn btn-primary fw-bold px-4 m-0" style="background: var(--brand-color); border: none; border-radius: 10px;">Daftarkan Akun</button>
+            <button type="submit" id="btn-simpan-register" class="btn btn-primary fw-bold px-4 m-0" style="background: var(--brand-color); border: none; border-radius: 10px;">Daftarkan Akun</button>
           </div>
       </form>
     </div>
@@ -554,6 +574,61 @@ function bukaHapusUser(id, nama) {
 }
 
 // =======================================================
+// 💡 JAVASCRIPT: AJAX REGISTER AKUN BARU
+// =======================================================
+function registerAkunAjax(event) {
+    event.preventDefault(); 
+    
+    let form = document.getElementById('formRegisterUser');
+    let formData = new FormData(form);
+    formData.append('register_akun_ajax', 'true'); 
+
+    let btn = document.getElementById('btn-simpan-register');
+    let originalText = btn.innerHTML;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Loading...`;
+    btn.disabled = true;
+
+    fetch('it_reset_rahasia.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (data.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('modalRegister')).hide();
+            document.getElementById('error-register-container').style.display = 'none';
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.pesan, confirmButtonColor: '#3b82f6', customClass: { popup: 'rounded-4' } })
+            .then(() => window.location.reload());
+        } else {
+            // JURUS SHAKE MODAL
+            let modalContent = document.getElementById('modalRegisterContent');
+            modalContent.classList.remove('shake-modal');
+            void modalContent.offsetWidth; 
+            modalContent.classList.add('shake-modal');
+            
+            let errContainer = document.getElementById('error-register-container');
+            errContainer.innerHTML = `<span class="error-text bg-white px-3 py-2 rounded-3 border"><i class="bi bi-exclamation-triangle-fill me-1"></i> ${data.pesan}</span>`;
+            errContainer.style.display = 'block';
+        }
+    })
+    .catch(err => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal terhubung ke server.', confirmButtonColor: '#ef4444' });
+    });
+}
+
+// PEMBERSIH MODAL REGISTER
+document.getElementById('modalRegister').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('modalRegisterContent').classList.remove('shake-modal');
+    document.getElementById('error-register-container').style.display = 'none';
+    document.getElementById('formRegisterUser').reset(); 
+});
+
+// =======================================================
 // 💡 JAVASCRIPT: AJAX EDIT & RESET AKUN
 // =======================================================
 function editAkunAjax(event) {
@@ -601,26 +676,20 @@ function editAkunAjax(event) {
     });
 }
 
-// PEMBERSIH OTOMATIS PAS MODAL DITUTUP
+// PEMBERSIH MODAL EDIT
 document.getElementById('modalEditUser').addEventListener('hidden.bs.modal', function () {
     document.getElementById('modalEditContent').classList.remove('shake-modal');
     document.getElementById('error-edit-container').style.display = 'none';
     document.querySelector('input[name="pw_custom"]').value = ''; 
 });
 
-// PEMBERSIH URL & ALERT PHP
+// PEMBERSIH URL & ALERT PHP LAMA
 function cleanURL() { window.history.replaceState({}, document.title, window.location.pathname); }
 
 const swalProps = { customClass: { popup: 'rounded-4 shadow-lg border-0' } };
 
 <?php if($status_msg == "sukses_hapus"): ?>
     Swal.fire({icon: 'success', title: 'Terhapus!', text: 'Akun berhasil dihapus.', confirmButtonColor: '#10b981', ...swalProps}).then(cleanURL);
-<?php elseif($status_msg == "sukses_register"): ?>
-    Swal.fire({icon: 'success', title: 'Berhasil!', text: 'Akun baru telah aktif.', confirmButtonColor: '#3b82f6', ...swalProps}).then(cleanURL);
-<?php elseif($status_msg == "pw_kurang"): ?>
-    Swal.fire({icon: 'warning', title: 'Password Lemah!', text: 'Minimal 6 karakter.', confirmButtonColor: '#f59e0b', ...swalProps}).then(cleanURL);
-<?php elseif($status_msg == "duplikat"): ?>
-    Swal.fire({icon: 'error', title: 'Gagal', text: 'Nomor Induk tersebut sudah digunakan.', confirmButtonColor: '#ef4444', ...swalProps}).then(cleanURL);
 <?php elseif($status_msg == "gagal_sistem"): ?>
     Swal.fire({icon: 'error', title: 'Error Sistem', text: 'Database gagal memproses.', confirmButtonColor: '#ef4444', ...swalProps}).then(cleanURL);
 <?php endif; ?>
