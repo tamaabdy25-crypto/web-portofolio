@@ -26,10 +26,10 @@ if (!@pg_query($conn, $q_update)) {
     pg_query($conn, "UPDATE meetings SET is_finished = TRUE WHERE is_finished = FALSE AND (meeting_date + end_time) <= CURRENT_TIMESTAMP");
 }
 
-// 2. AMBIL DATA JADWAL LIVE MILIK USER (QUERY DIPERBAIKI BIAR MUNCUL)
+// QUERY BARIS 32 - 34: Pastikan $my_id sudah benar-benar terfilter
 $sql = "SELECT * FROM meetings 
-        WHERE user_id = '$my_id' 
-        AND (is_finished IS FALSE OR is_finished = 0 OR is_finished IS NULL) 
+        WHERE user_id = " . intval($my_id) . " 
+        AND (is_finished IS FALSE OR is_finished = 0) 
         ORDER BY meeting_date ASC, start_time ASC";
 
 $res = @pg_query($conn, $sql);
