@@ -491,7 +491,7 @@ $query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role
           <input type="hidden" name="id_user" id="edit_id_user">
           <div class="modal-body px-4 pt-3 pb-2">
               <div class="mb-3">
-                  <label class="form-label text-muted"><i class="bi bi-lock-fill me-1"></i>Nomor Induk (Permanen)</label>
+                  <label class="form-label text-muted"><i class="bi bi-lock-fill me-1"></i>Nomor Registrasi Pegawai (Permanen)</label>
                   <input type="text" id="edit_no_induk" class="form-control shadow-none" readonly style="background: #f1f5f9; font-weight: 700; color: #64748b; border: 1px dashed #cbd5e1;">
               </div>
               <div class="mb-3">
