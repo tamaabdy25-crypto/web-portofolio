@@ -104,6 +104,9 @@ if ($action == 'tambah') {
                         }
                     }
                 }
+                
+                // [TAMBAHAN SAKTI] Otomatis masukin si pengusul ke daftar penerima email!
+                $peserta_clean[] = $my_id; 
                 $peserta_clean = array_unique($peserta_clean);
 
                 foreach ($peserta_clean as $id_karyawan) {
@@ -166,6 +169,9 @@ if ($action == 'edit') {
                         }
                     }
                 }
+                
+                // [TAMBAHAN SAKTI] Otomatis masukin si pengusul biar nggak disangka keluar dari meeting
+                $peserta_baru[] = $my_id;
                 $peserta_baru = array_unique($peserta_baru);
                 
                 $q_lama = @pg_query($conn, "SELECT id_user FROM agenda_peserta WHERE id_agenda = '$id_edit'");
@@ -255,7 +261,12 @@ if ($action == 'hapus') {
         $start = substr($r_meet['start_time'], 0, 5);
         $end   = substr($r_meet['end_time'], 0, 5);
 
-        $q_peserta = @pg_query($conn, "SELECT u.nama_lengkap, u.email FROM agenda_peserta ap JOIN users u ON ap.id_user = u.id WHERE ap.id_agenda='$id'");
+        // [TAMBAHAN SAKTI] Pake UNION biar pengusul ($my_id) dijamin tetep dapet email pembatalan
+        $q_peserta = @pg_query($conn, "
+            SELECT u.nama_lengkap, u.email FROM agenda_peserta ap JOIN users u ON ap.id_user = u.id WHERE ap.id_agenda='$id'
+            UNION 
+            SELECT nama_lengkap, email FROM users WHERE id='$my_id'
+        ");
         
         while ($r_peserta = pg_fetch_assoc($q_peserta)) {
             $nama_peserta = $r_peserta['nama_lengkap'];
