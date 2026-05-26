@@ -423,11 +423,11 @@ if (isset($_POST['aksi_foto'])) {
                     
                     <div class="row mt-3">
                         <div class="col-md-6">
-                            <div class="info-label">Nama Panggilan</div>
+                            <div class="info-label">Nama</div>
                             <div class="info-value"><?php echo htmlspecialchars($user['nama_lengkap']); ?></div>
                         </div>
                         <div class="col-md-6">
-                            <div class="info-label">Nomor Induk</div>
+                            <div class="info-label">Nomor Registrasi Pegawai</div>
                             <div class="info-value"><?php echo htmlspecialchars($user['nomor_induk']); ?></div>
                         </div>
                         <div class="col-md-6">
