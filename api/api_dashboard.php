@@ -4,13 +4,21 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 session_start();
+// ==========================================
+// OBAT ANTI-CACHE VERCEL TINGKAT DEWA
+// ==========================================
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+
 include 'koneksi.php';
 
 // Cek Keamanan
-$my_id = $_SESSION['user_id'] ?? 0;
-if (!$my_id) {
+$my_id = $_SESSION['user_id'] ?? '';
+if (empty($my_id)) {
     echo json_encode(["status" => "error", "pesan" => "Akses ditolak. Belum login."]);
     exit;
 }
@@ -26,10 +34,11 @@ if (!@pg_query($conn, $q_update)) {
     pg_query($conn, "UPDATE meetings SET is_finished = TRUE WHERE is_finished = FALSE AND (meeting_date + end_time) <= CURRENT_TIMESTAMP");
 }
 
-// QUERY BARIS 32 - 34: Pastikan $my_id sudah benar-benar terfilter
+// 2. AMBIL DATA JADWAL KHUSUS MILIK USER SAJA
+// (Hapus intval() biar ID yang pakai huruf/UUID gak jadi angka 0)
 $sql = "SELECT * FROM meetings 
-        WHERE user_id = " . intval($my_id) . " 
-        AND (is_finished IS FALSE OR is_finished = 0) 
+        WHERE user_id = '$my_id' 
+        AND (is_finished IS FALSE OR is_finished = 0 OR is_finished IS NULL) 
         ORDER BY meeting_date ASC, start_time ASC";
 
 $res = @pg_query($conn, $sql);
