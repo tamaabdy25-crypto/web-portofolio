@@ -29,8 +29,19 @@ if (!@pg_query($conn, $q_update)) {
 }
 
 // 2. AMBIL DATA JADWAL LIVE MILIK USER
-$sql = "SELECT * FROM meetings WHERE user_id = '$my_id' AND is_finished = 0 ORDER BY meeting_date ASC, start_time ASC";
+// Kita gunakan 'IS NOT TRUE' agar aman untuk 0 maupun FALSE
+$sql = "SELECT * FROM meetings 
+        WHERE user_id = '$my_id' 
+        AND (is_finished IS FALSE OR is_finished = 0) 
+        ORDER BY meeting_date ASC, start_time ASC";
+
 $res = @pg_query($conn, $sql);
+
+// Kalau database tetep ngamuk, kita tangkap errornya
+if (!$res) {
+    echo json_encode(["status" => "error", "pesan" => "DB Error: " . pg_last_error($conn)]);
+    exit;
+}
 
 if (!$res) {
     // Kalau query angka gagal lagi, ambil pakai bahasa Boolean
