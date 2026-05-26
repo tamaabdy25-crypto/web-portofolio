@@ -60,7 +60,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>E-VISION - Dashboard</title>
-    <link rel="icon" type="image/png" href="api/favicon.png">
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
