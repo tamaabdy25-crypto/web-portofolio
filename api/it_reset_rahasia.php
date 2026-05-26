@@ -109,11 +109,11 @@ if (isset($_POST['edit_akun_ajax'])) {
     // Kalau kolom password diisi, berarti sekalian ganti password
     if (!empty($pw_custom)) {
         if (strlen($pw_custom) < 6) {
-            echo json_encode(["status" => "error", "pesan" => "Password baru minimal 6 karakter bosku!"]);
+            echo json_encode(["status" => "error", "pesan" => "Password baru minimal 6 karakter!"]);
             exit;
         }
         if (password_verify($pw_custom, $target_user['password'])) {
-            echo json_encode(["status" => "error", "pesan" => "Kocak! Password reset gak boleh sama persis kayak password dia saat ini!"]);
+            echo json_encode(["status" => "error", "pesan" => "Password tidak boleh sama dengan password saat ini!"]);
             exit;
         }
         $hashed_pw = password_hash($pw_custom, PASSWORD_DEFAULT);
@@ -339,8 +339,11 @@ $query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role
                 </div>
             </form>
             
-            <div class="header-actions d-flex d-md-none mt-3 mt-md-0">
-                <button type="button" class="btn btn-add-account w-100" data-bs-toggle="modal" data-bs-target="#modalRegister">
+         <div class="header-actions d-flex d-md-none mt-3 mt-md-0 w-100 gap-2">
+                <a href="input.php" class="btn btn-back flex-fill text-center m-0 py-2">
+                    <i class="bi bi-arrow-left me-1"></i> Dashboard
+                </a>
+                <button type="button" class="btn btn-add-account flex-fill m-0 py-2" data-bs-toggle="modal" data-bs-target="#modalRegister">
                     <i class="bi bi-plus-lg me-1"></i> Tambah
                 </button>
             </div>
