@@ -332,7 +332,7 @@ $query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role
             <form method="GET" class="search-form flex-grow-1" style="max-width: 500px;">
                 <div class="input-group search-input-group">
                     <span class="input-group-text px-3"><i class="bi bi-search"></i></span>
-                    <input type="text" name="search" class="form-control ps-0" placeholder="Cari berdasarkan NIK, Nama, atau Email..." value="<?php echo htmlspecialchars($search); ?>">
+                    <input type="text" name="search" class="form-control ps-0" placeholder="Cari berdasarkan NRP, Nama, atau Email..." value="<?php echo htmlspecialchars($search); ?>">
                     <?php if(!empty($search)): ?>
                         <a href="it_reset_rahasia.php" class="btn btn-light border-start px-3 text-muted"><i class="bi bi-x-lg"></i></a>
                     <?php endif; ?>
@@ -370,7 +370,7 @@ $query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role
                                             <?php echo !empty($u['nama_lengkap']) ? htmlspecialchars($u['nama_lengkap']) : '<span class="text-danger fst-italic">Tanpa Nama</span>'; ?>
                                         </div>
                                         <div class="text-muted small mt-1 fw-medium" style="font-family: monospace; font-size: 0.8rem;">
-                                            <i class="bi bi-fingerprint me-1"></i>NIK: <?php echo !empty($u['nomor_induk']) ? htmlspecialchars($u['nomor_induk']) : '-'; ?>
+                                            <i class="bi bi-fingerprint me-1"></i>NRP: <?php echo !empty($u['nomor_induk']) ? htmlspecialchars($u['nomor_induk']) : '-'; ?>
                                         </div>
                                     </div>
                                     <div class="d-block d-md-none">
