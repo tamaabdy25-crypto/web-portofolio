@@ -34,7 +34,7 @@ date_default_timezone_set('Asia/Jakarta');
         .header-section {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start; 
+            align-items: stretch; /* <--- UBAH JADI STRETCH BIAR TINGGI KANAN = KIRI */
             margin-bottom: 20px; 
             padding-bottom: 15px;
             border-bottom: 2px solid #e2e8f0;
@@ -64,9 +64,9 @@ date_default_timezone_set('Asia/Jakarta');
             filter: brightness(0); 
         }
 
-        /* --- CSS LOGO KANAN BARU (DIBIKIN LEBIH GEDE BIAR SEIMBANG) --- */
+        /* --- CSS LOGO KANAN BARU --- */
         .logo-asli-container {
-            height: 65px; /* <--- TINGGI DINAJIKIN KE 65px BIAR GAGAH */
+            height: 65px; 
             display: flex;
             align-items: center;
             filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.15)); 
@@ -148,7 +148,7 @@ date_default_timezone_set('Asia/Jakarta');
             display: flex;
             flex-direction: column;
             align-items: flex-end; 
-            gap: 5px; /* <--- JARAK JAM DIKURANGIN BIAR PAS SEJAJAR SAMA KIRI */
+            justify-content: space-between; /* <--- INI KUNCINYA BIAR JAM KEDORONG MENTOK BAWAH */
         }
     </style>
 </head>
@@ -157,6 +157,7 @@ date_default_timezone_set('Asia/Jakarta');
 <div class="display-container">
     <div class="header-section">
         
+        <!-- BAGIAN KIRI -->
         <div class="brand-box">
             <div class="logo-split-container">
                 <img src="logo_e.png" alt="E-" class="logo-part-e">
@@ -183,8 +184,10 @@ date_default_timezone_set('Asia/Jakarta');
             </div>
         </div>
 
+        <!-- BAGIAN KANAN (Logo Tambahan Asli 1 File + Jam Mentok Bawah) -->
         <div class="right-box">
             <div class="logo-asli-container">
+                <!-- GANTI "logo_instansi.png" SAMA NAMA FILE LOGO ENERGIA LU -->
                 <img src="logo_energia.png" alt="Logo Kanan">
             </div>
             <div class="clock-box" id="digital-clock">00:00:00</div>
