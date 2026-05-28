@@ -130,7 +130,7 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         <div class="d-flex justify-content-between align-items-center mb-4 card-header-flex">
             <h5 class="fw-bold m-0 text-dark" id="judulHalaman"><i class="bi bi-clock-history me-2 text-success"></i>Riwayat Agenda</h5>
             <button onclick="loadArsip(1, true)" class="btn btn-print shadow-sm">
-                <i class="bi bi-printer-fill me-1"></i> Cetak Laporan (PDF)
+                <i class="bi bi-printer-fill me-1"></i> Cetak Laporan
             </button>
         </div>
 
