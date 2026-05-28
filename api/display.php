@@ -34,20 +34,18 @@ date_default_timezone_set('Asia/Jakarta');
         .header-section {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start; /* Ubah ke flex-start biar sejajar dari atas */
+            align-items: flex-start; 
             margin-bottom: 20px; 
             padding-bottom: 15px;
             border-bottom: 2px solid #e2e8f0;
         }
 
-        /* --- CSS LOGO GAMBAR WARNA-WARNI (MENGGUNAKAN 2 FILE) --- */
-        /* Hapus .brand-box di depannya biar bisa dipake di kanan juga */
+        /* --- CSS LOGO KIRI (WARNA DIUBAH PAKE CSS) --- */
         .logo-split-container { 
-            height: 45px; /* Sesuaikan ukuran tinggi logo di sini */
+            height: 45px; 
             display: flex;
             align-items: center;
             margin-bottom: 12px;
-            /* Efek bayangan tipis agar gambar terpisah dari background */
             filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.15)); 
         }
         
@@ -57,15 +55,28 @@ date_default_timezone_set('Asia/Jakarta');
             display: block;
         }
 
-        /* SIHIR CSS 1: Mengubah gambar putih jadi HIJAU (#10b981) */
         .logo-part-e {
-            margin-right: 2px; /* Jarak antara E- dan VISION */
+            margin-right: 2px; 
             filter: brightness(0) invert(55%) sepia(61%) saturate(464%) hue-rotate(108deg) brightness(96%) contrast(95%);
         }
 
-        /* SIHIR CSS 2: Mengubah gambar putih jadi HITAM PEKAT */
         .logo-part-vision {
             filter: brightness(0); 
+        }
+
+        /* --- CSS LOGO KANAN BARU (1 FILE, WARNA ASLI) --- */
+        .logo-asli-container {
+            height: 45px; /* Tingginya dipasin sama logo kiri */
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.15)); /* Cuma kasih bayangan tipis aja */
+        }
+
+        .logo-asli-container img {
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
         
         #full-date { 
@@ -81,7 +92,6 @@ date_default_timezone_set('Asia/Jakarta');
             margin-top: 12px;
         }
 
-        /* --- EFEK PAPER-CUT 3D --- */
         .weather-item {
             padding: 10px 18px;
             border-radius: 18px;
@@ -90,14 +100,12 @@ date_default_timezone_set('Asia/Jakarta');
             gap: 12px;
             border: none;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            /* Soft Shadow ala Neumorphism/Paper-cut */
             box-shadow: 6px 6px 12px #d1d5db, -6px -6px 12px #ffffff;
             min-width: 140px;
         }
 
         .weather-item i { 
             font-size: 1.8rem; 
-            /* Bayangan Ikon agar terlihat seperti potongan kertas */
             filter: drop-shadow(2px 3px 2px rgba(0,0,0,0.15));
             transition: all 0.5s ease;
         }
@@ -105,7 +113,6 @@ date_default_timezone_set('Asia/Jakarta');
         .weather-item span { font-size: 14px; font-weight: 800; }
         .weather-item label { font-size: 10px; font-weight: 700; text-transform: uppercase; margin: 0; display: block; }
 
-        /* Gradasi Dinamis Berdasarkan Cuaca */
         .weather-sunny { background: linear-gradient(135deg, #FFF9C4, #FFF176); color: #F57F17; }
         .weather-cloudy { background: linear-gradient(135deg, #E3F2FD, #90CAF9); color: #1976D2; }
         .weather-rainy { background: linear-gradient(135deg, #ECEFF1, #B0BEC5); color: #455A64; }
@@ -134,16 +141,15 @@ date_default_timezone_set('Asia/Jakarta');
         #data-meeting td:first-child { border-radius: 15px 0 0 15px; }
         #data-meeting td:last-child { border-radius: 0 15px 15px 0; }
 
-        /* --- PERBAIKAN TEKS AGAR TAJAM --- */
         .meeting-title { font-weight: 700; color: var(--text-dark); font-size: 1.1rem; }
         .meeting-time { font-weight: 600; color: var(--accent-green); }
         
-        /* WADAH KANAN BARU */
+        /* WADAH KANAN */
         .right-box {
             display: flex;
             flex-direction: column;
-            align-items: flex-end; /* Rata Kanan */
-            gap: 15px; /* Jarak antara logo dan jam */
+            align-items: flex-end; 
+            gap: 15px; 
         }
     </style>
 </head>
@@ -154,7 +160,7 @@ date_default_timezone_set('Asia/Jakarta');
         
         <div class="brand-box">
             <div class="logo-split-container">
-                <img src="logo_energia.png" alt="E-" class="logo-part-e">
+                <img src="logo_e.png" alt="E-" class="logo-part-e">
                 <img src="logo_vision.png" alt="VISION" class="logo-part-vision">
             </div>
             
@@ -179,9 +185,8 @@ date_default_timezone_set('Asia/Jakarta');
         </div>
 
         <div class="right-box">
-            <div class="logo-split-container" style="margin-bottom: 0;">
-                <img src="logo_energia.png" alt="Logo Kanan" class="logo-part-e">
-                <img src="logo_vision.png" alt="Logo Kanan" class="logo-part-vision">
+            <div class="logo-asli-container">
+                <img src="logo_energia.png" alt="Logo Kanan">
             </div>
             <div class="clock-box" id="digital-clock">00:00:00</div>
         </div>
@@ -199,36 +204,31 @@ date_default_timezone_set('Asia/Jakarta');
     let serverTime; 
     let lastSync = 0;
 
-    // Fungsi mapping icon & style dinamis
     function applyWeatherStyle(elementId, iconId, code) {
         const card = document.getElementById(elementId);
         const icon = document.getElementById(iconId);
         
-        // Reset class
         card.classList.remove('weather-sunny', 'weather-cloudy', 'weather-rainy');
         
-        if (code === 0 || code === 1) { // Cerah
+        if (code === 0 || code === 1) { 
             card.classList.add('weather-sunny');
             icon.className = 'bi bi-sun-fill';
-        } else if (code >= 2 && code <= 48) { // Berawan / Kabut
+        } else if (code >= 2 && code <= 48) { 
             card.classList.add('weather-cloudy');
             icon.className = 'bi bi-cloud-sun-fill';
-        } else { // Hujan / Petir
+        } else { 
             card.classList.add('weather-rainy');
             icon.className = 'bi bi-cloud-rain-heavy-fill';
         }
     }
 
     function updateWeather() {
-        // Menggunakan API Open-Meteo untuk data real-time
         fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2088&longitude=106.8456&current_weather=true&daily=temperature_2m_max,weathercode&timezone=Asia%2FJakarta')
             .then(response => response.json())
             .then(data => {
-                // Update Hari Ini
                 document.getElementById('temp-today').innerText = Math.round(data.current_weather.temperature) + '°C';
                 applyWeatherStyle('card-today', 'icon-today', data.current_weather.weathercode);
                 
-                // Update Besok
                 document.getElementById('temp-tomorrow').innerText = Math.round(data.daily.temperature_2m_max[1]) + '°C';
                 applyWeatherStyle('card-tomorrow', 'icon-tomorrow', data.daily.weathercode[1]);
             })
@@ -268,14 +268,12 @@ date_default_timezone_set('Asia/Jakarta');
         document.getElementById('full-date').innerText = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
     }
 
-    // Eksekusi Awal
     updateWeather();
     loadMeetingData();
     
-    // Interval Update
-    setInterval(updateWeather, 600000); // Cuaca update tiap 10 menit
-    setInterval(updateClock, 1000);     // Jam update tiap detik
-    setInterval(loadMeetingData, 5000); // Data meeting update tiap 5 detik
+    setInterval(updateWeather, 600000); 
+    setInterval(updateClock, 1000);     
+    setInterval(loadMeetingData, 5000); 
 </script>
 </body>
 </html>
