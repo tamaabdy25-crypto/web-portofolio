@@ -21,9 +21,6 @@ date_default_timezone_set('Asia/Jakarta');
 $hari_ini = date('Y-m-d');
 $jam_sekarang = date('H:i');
 
-// ==============================================================
-// 0. AUTO-CREATE TABEL KOTAK POS (ANTREAN EMAIL) BIAR KILAT ⚡
-// ==============================================================
 $cek_tabel = @pg_query($conn, "SELECT tablename FROM pg_tables WHERE tablename = 'antrean_email'");
 if(pg_num_rows($cek_tabel) == 0) {
     @pg_query($conn, "CREATE TABLE antrean_email (
@@ -36,17 +33,11 @@ if(pg_num_rows($cek_tabel) == 0) {
     )");
 }
 
-// ==============================================================
-// 1. OTOMATIS TAMBAH KOLOM PESERTA BIAR GA ERROR
-// ==============================================================
 $check_col = @pg_query($conn, "SELECT column_name FROM information_schema.columns WHERE table_name='meetings' AND column_name='peserta'");
 if(pg_num_rows($check_col) == 0) {
     @pg_query($conn, "ALTER TABLE meetings ADD peserta TEXT NULL");
 }
 
-// ==============================================================
-// 2. OBAT SAKTI: PATCH OTOMATIS BIAR JADWAL LAMA KEBACA PESERTANYA
-// ==============================================================
 $q_patch = @pg_query($conn, "SELECT id FROM meetings WHERE peserta IS NULL OR peserta = ''");
 if ($q_patch) {
     while($r_patch = pg_fetch_assoc($q_patch)) {
@@ -80,13 +71,11 @@ if ($action == 'tambah') {
     } else if ($end <= $start) {
         echo json_encode(["status" => "error", "pesan" => "Waktu selesai tidak logis!"]); exit;
     } else {
-        // FIX BOOLEAN: is_finished = FALSE
         $check_bentrok = @pg_query($conn, "SELECT * FROM meetings WHERE room_name = '$room' AND meeting_date = '$date' AND is_finished = FALSE AND (('$start' >= start_time AND '$start' < end_time) OR ('$end' > start_time AND '$end' <= end_time) OR (start_time >= '$start' AND start_time < '$end'))");
         
         if ($check_bentrok && pg_num_rows($check_bentrok) > 0) {
             echo json_encode(["status" => "error", "pesan" => "Ruangan dipakai di jam tersebut!"]); exit;
         } else {
-            // FIX BOOLEAN: FALSE, bukan 0
             $simpan = @pg_query($conn, "INSERT INTO meetings (title, room_name, meeting_date, start_time, end_time, user_id, is_finished, nomor_induk, nama_pengusul) VALUES ('$title', '$room', '$date', '$start', '$end', '$my_id', FALSE, '$my_no_induk', '$nama_lengkap') RETURNING id");
             
             if ($simpan) {
@@ -105,12 +94,10 @@ if ($action == 'tambah') {
                     }
                 }
                 
-                // [TAMBAHAN SAKTI] Otomatis masukin si pengusul ke daftar penerima email!
                 $peserta_clean[] = $my_id; 
                 $peserta_clean = array_unique($peserta_clean);
 
                 foreach ($peserta_clean as $id_karyawan) {
-                    // FIX BOOLEAN: FALSE, FALSE, bukan 0, 0
                     @pg_query($conn, "INSERT INTO agenda_peserta (id_agenda, id_user, email_terkirim_undangan, email_terkirim_pengingat) VALUES ('$id_meeting_baru', '$id_karyawan', FALSE, FALSE)");
                 }
 
@@ -146,7 +133,6 @@ if ($action == 'edit') {
     } else if ($end <= $start) {
         echo json_encode(["status" => "error", "pesan" => "Waktu selesai tidak logis!"]); exit;
     } else {
-        // FIX BOOLEAN: is_finished = FALSE
         $check_bentrok = @pg_query($conn, "SELECT * FROM meetings WHERE room_name = '$room' AND meeting_date = '$date' AND is_finished = FALSE AND id != '$id_edit' AND (('$start' >= start_time AND '$start' < end_time) OR ('$end' > start_time AND '$end' <= end_time) OR (start_time >= '$start' AND start_time < '$end'))");
         
         if ($check_bentrok && pg_num_rows($check_bentrok) > 0) {
@@ -170,7 +156,6 @@ if ($action == 'edit') {
                     }
                 }
                 
-                // [TAMBAHAN SAKTI] Otomatis masukin si pengusul biar nggak disangka keluar dari meeting
                 $peserta_baru[] = $my_id;
                 $peserta_baru = array_unique($peserta_baru);
                 
@@ -182,9 +167,7 @@ if ($action == 'edit') {
 
                 $peserta_dihapus = array_diff($peserta_lama, $peserta_baru);
 
-                // ==============================================================
-                // HAPUS KORBAN & LEMPAR KE ANTREAN EMAIL
-                // ==============================================================
+                // --- HAPUS KORBAN & LEMPAR KE ANTREAN EMAIL ---
                 if (!empty($peserta_dihapus)) {
                     foreach ($peserta_dihapus as $id_kick) {
                         $id_kick = pg_escape_string($conn, $id_kick);
@@ -223,13 +206,44 @@ if ($action == 'edit') {
                     }
                 }
 
+                // --- TAMBAH PESERTA BARU ATAU UPDATE PESERTA LAMA ---
                 foreach ($peserta_baru as $id_karyawan) {
                     $id_karyawan = pg_escape_string($conn, $id_karyawan);
                     $cek_peserta = @pg_query($conn, "SELECT id FROM agenda_peserta WHERE id_agenda='$id_edit' AND id_user='$id_karyawan'");
                     
                     if (pg_num_rows($cek_peserta) == 0) {
-                        // FIX BOOLEAN: FALSE, FALSE
+                        // Kalau peserta benar-benar baru, biar cron yang ngirim undangan awal
                         @pg_query($conn, "INSERT INTO agenda_peserta (id_agenda, id_user, email_terkirim_undangan, email_terkirim_pengingat) VALUES ('$id_edit', '$id_karyawan', FALSE, FALSE)");
+                    } else {
+                        // 💡 LOGIKA SAKTI: Kalau peserta LAMA, kirimin email pemberitahuan JADWAL DIUPDATE!
+                        $q_info = @pg_query($conn, "SELECT nama_lengkap, email FROM users WHERE id='$id_karyawan'");
+                        if($r_info = pg_fetch_assoc($q_info)) {
+                            $em = pg_escape_string($conn, $r_info['email']);
+                            $nm = pg_escape_string($conn, $r_info['nama_lengkap']);
+                            
+                            if (!empty($em)) {
+                                $sb_update = "UPDATE JADWAL MEETING: " . $title;
+                                $ps_update = "
+                                <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #f59e0b; border-radius: 10px; max-width: 500px;'>
+                                    <h3 style='color: #f59e0b; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;'>JADWAL DIPERBARUI</h3>
+                                    <p>Halo, <b>$nm</b>!</p>
+                                    <p>Terdapat <b>perubahan jadwal atau ruangan</b> pada meeting yang Anda ikuti. Berikut adalah detail terbarunya:</p>
+                                    <table border='0' cellpadding='6' style='background: #fffbeb; width: 100%; border-radius: 8px;'>
+                                        <tr><td width='30%'><b>Agenda</b></td><td>: $title</td></tr>
+                                        <tr><td><b>Tanggal</b></td><td>: $date</td></tr>
+                                        <tr><td><b>Waktu</b></td><td>: " . substr($start, 0, 5) . " - " . substr($end, 0, 5) . " WIB</td></tr>
+                                        <tr><td><b>Ruangan</b></td><td>: $room</td></tr>
+                                    </table>
+                                    <p style='margin-top: 20px;'>Mohon sesuaikan jadwal Anda dengan informasi terbaru ini. Terima kasih!</p>
+                                </div>";
+                                
+                                $ps_update = pg_escape_string($conn, $ps_update);
+                                @pg_query($conn, "INSERT INTO antrean_email (email_tujuan, nama_tujuan, subjek, pesan_html) VALUES ('$em', '$nm', '$sb_update', '$ps_update')");
+                                
+                                // Reset pengingat supaya nanti tetep dapet reminder 5 menit sebelum jadwal baru
+                                @pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = FALSE WHERE id_agenda='$id_edit' AND id_user='$id_karyawan'");
+                            }
+                        }
                     }
                 }
                 
@@ -261,7 +275,6 @@ if ($action == 'hapus') {
         $start = substr($r_meet['start_time'], 0, 5);
         $end   = substr($r_meet['end_time'], 0, 5);
 
-        // [TAMBAHAN SAKTI] Pake UNION biar pengusul ($my_id) dijamin tetep dapet email pembatalan
         $q_peserta = @pg_query($conn, "
             SELECT u.nama_lengkap, u.email FROM agenda_peserta ap JOIN users u ON ap.id_user = u.id WHERE ap.id_agenda='$id'
             UNION 
@@ -307,7 +320,6 @@ if ($action == 'hapus') {
 // --- 4. AKSI SELESAIKAN JADWAL ---
 if ($action == 'selesai') {
     $id = pg_escape_string($conn, $_POST['id']);
-    // FIX BOOLEAN: Pake TRUE, bukan 1
     @pg_query($conn, "UPDATE meetings SET is_finished=TRUE WHERE id='$id'");
     echo json_encode(["status" => "success", "pesan" => "Agenda Selesai"]); exit;
 }
