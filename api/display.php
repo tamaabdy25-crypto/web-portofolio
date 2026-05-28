@@ -64,13 +64,12 @@ date_default_timezone_set('Asia/Jakarta');
             filter: brightness(0); 
         }
 
-        /* --- CSS LOGO KANAN BARU (1 FILE, WARNA ASLI) --- */
+        /* --- CSS LOGO KANAN BARU (DIBIKIN LEBIH GEDE BIAR SEIMBANG) --- */
         .logo-asli-container {
-            height: 45px; /* Tingginya dipasin sama logo kiri */
+            height: 65px; /* <--- TINGGI DINAJIKIN KE 65px BIAR GAGAH */
             display: flex;
             align-items: center;
-            margin-bottom: 12px;
-            filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.15)); /* Cuma kasih bayangan tipis aja */
+            filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.15)); 
         }
 
         .logo-asli-container img {
@@ -149,7 +148,7 @@ date_default_timezone_set('Asia/Jakarta');
             display: flex;
             flex-direction: column;
             align-items: flex-end; 
-            gap: 15px; 
+            gap: 5px; /* <--- JARAK JAM DIKURANGIN BIAR PAS SEJAJAR SAMA KIRI */
         }
     </style>
 </head>
