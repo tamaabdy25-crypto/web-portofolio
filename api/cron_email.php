@@ -5,19 +5,14 @@ date_default_timezone_set('Asia/Jakarta');
 // PANGGIL DATABASE
 include 'koneksi.php';
 
-// ==========================================
 // KODE SAKTI: SINKRONISASI JAM SERVER BULE KE JAM JAKARTA
-// ==========================================
 pg_query($conn, "SET TIME ZONE 'Asia/Jakarta'");
-// ==========================================
 
 // PANGGIL ALAT KURIR (PHPMAILER)
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// ==========================================
 // KODE SAKTI: AUTO-DETECT ALAMAT PHPMAILER 
-// ==========================================
 $jalur_dalam = __DIR__ . '/PHPMailer/src/Exception.php';
 $jalur_luar  = __DIR__ . '/../PHPMailer/src/Exception.php';
 
@@ -32,15 +27,11 @@ if (file_exists($jalur_dalam)) {
 } else {
     die("Error Gawat: Folder PHPMailer ilang Bosku! Pastiin folder 'PHPMailer' udah lu push ke GitHub ya!");
 }
-// ==========================================
 
-// ==========================================
 // ⚠️ BAGIAN WAJIB LU UBAH ⚠️
-// ==========================================
 $email_robot    = "pengelola.evision@gmail.com"; 
 $password_robot = "cmozgaxoxqrajrii"; // <-- INGET PASSWORD LU JANGAN LUPA DIISI LAGI YA!
 $nama_pengirim  = "E-VISION";
-// ==========================================
 
 // FUNGSI UTAMA NGIRIM EMAIL
 function kirimEmail($ke_email, $ke_nama, $subjek, $pesan_html) {
@@ -52,7 +43,7 @@ function kirimEmail($ke_email, $ke_nama, $subjek, $pesan_html) {
         $mail->SMTPAuth   = true;
         $mail->Username   = $email_robot;
         $mail->Password   = $password_robot;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Pakai keamanan SSL
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port       = 465;
 
         $mail->setFrom($email_robot, $nama_pengirim);
@@ -74,7 +65,6 @@ $log_aktivitas = "";
 // ==========================================
 // MESIN 1: KIRIM EMAIL UNDANGAN BARU
 // ==========================================
-// FIX BOOLEAN: Ubah 0 jadi FALSE
 $q_undangan = pg_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m.title, m.room_name, m.meeting_date, m.start_time, m.end_time, m.nama_pengusul 
     FROM agenda_peserta ap 
     JOIN users u ON ap.id_user = u.id 
@@ -82,15 +72,25 @@ $q_undangan = pg_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m
     WHERE ap.email_terkirim_undangan = FALSE AND u.email IS NOT NULL AND u.email != ''");
 
 while ($row = pg_fetch_assoc($q_undangan)) {
-    // FIX BOOLEAN: Ubah 1 jadi TRUE
     pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = TRUE WHERE id = '{$row['id_ap']}'");
 
-    $subjek = "Undangan Meeting: " . $row['title'];
+    // --- LOGIKA CERDAS: BEDAIN EMAIL PEMBUAT JADWAL DAN PESERTA ---
+    $teks_pengantar = "";
+    $subjek = "";
+    if (trim(strtolower($row['nama_lengkap'])) === trim(strtolower($row['nama_pengusul']))) {
+        $subjek = "Jadwal Berhasil Dibuat: " . $row['title'];
+        $teks_pengantar = "Anda telah <b>berhasil membuat</b> jadwal meeting baru sebagai penyelenggara.";
+    } else {
+        $subjek = "Undangan Meeting: " . $row['title'];
+        $teks_pengantar = "Anda diundang untuk menghadiri meeting oleh <b>{$row['nama_pengusul']}</b>.";
+    }
+    // --------------------------------------------------------------
+
     $pesan = "
-        <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 500px;'>
+        <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #10b981; border-radius: 10px; max-width: 500px;'>
             <h3 style='color: #10b981; border-bottom: 2px solid #10b981; padding-bottom: 10px;'>E-VISION INVITATION</h3>
             <p>Halo, <b>{$row['nama_lengkap']}</b>!</p>
-            <p>Anda diundang untuk menghadiri meeting oleh <b>{$row['nama_pengusul']}</b>.</p>
+            <p>{$teks_pengantar}</p>
             <table border='0' cellpadding='6' style='background: #f8fafc; width: 100%; border-radius: 8px;'>
                 <tr><td width='30%'><b>Agenda</b></td><td>: {$row['title']}</td></tr>
                 <tr><td><b>Tanggal</b></td><td>: {$row['meeting_date']}</td></tr>
@@ -106,7 +106,6 @@ while ($row = pg_fetch_assoc($q_undangan)) {
     if (kirimEmail($row['email'], $row['nama_lengkap'], $subjek, $pesan)) {
         $log_aktivitas .= "<div class='mb-2 text-success fw-bold'><i class='bi bi-check-circle-fill me-2'></i>Undangan terkirim ke: <span class='text-dark'>{$row['email']}</span></div>";
     } else {
-        // FIX BOOLEAN: Ubah 0 jadi FALSE
         pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_undangan = FALSE WHERE id = '{$row['id_ap']}'");
         $log_aktivitas .= "<div class='mb-2 text-danger fw-bold'><i class='bi bi-x-circle-fill me-2'></i>Gagal kirim undangan ke: <span class='text-dark'>{$row['email']}</span></div>";
     }
@@ -115,7 +114,6 @@ while ($row = pg_fetch_assoc($q_undangan)) {
 // ==========================================
 // MESIN 2: KIRIM EMAIL PENGINGAT (5 Menit Sebelum Mulai)
 // ==========================================
-// FIX BOOLEAN: Ubah 0 jadi FALSE
 $q_pengingat = pg_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, m.title, m.room_name, m.start_time, m.end_time 
     FROM agenda_peserta ap 
     JOIN users u ON ap.id_user = u.id 
@@ -126,7 +124,6 @@ $q_pengingat = pg_query($conn, "SELECT ap.id as id_ap, u.email, u.nama_lengkap, 
     AND u.email IS NOT NULL AND u.email != ''");
 
 while ($row = pg_fetch_assoc($q_pengingat)) {
-    // FIX BOOLEAN: Ubah 1 jadi TRUE
     pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = TRUE WHERE id = '{$row['id_ap']}'");
 
     $subjek = "PENGINGAT: Meeting '{$row['title']}' Segera Dimulai!";
@@ -150,30 +147,26 @@ while ($row = pg_fetch_assoc($q_pengingat)) {
     if (kirimEmail($row['email'], $row['nama_lengkap'], $subjek, $pesan)) {
         $log_aktivitas .= "<div class='mb-2 text-warning fw-bold'><i class='bi bi-alarm-fill me-2'></i>Pengingat terkirim ke: <span class='text-dark'>{$row['email']}</span></div>";
     } else {
-        // FIX BOOLEAN: Ubah 0 jadi FALSE
         pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = FALSE WHERE id = '{$row['id_ap']}'");
     }
 }
 
 // ==========================================
-// MESIN 3: KIRIM EMAIL PEMBATALAN DARI ANTREAN
+// MESIN 3: KIRIM EMAIL DARI ANTREAN (Batal & Update)
 // ==========================================
-// Catatan: Kolom `status` di tabel `antrean_email` pakai tipe INT, jadi 0 dan 1 aman dan gak perlu diubah.
 $q_batal = pg_query($conn, "SELECT * FROM antrean_email WHERE status = 0");
 while ($row = pg_fetch_assoc($q_batal)) {
     pg_query($conn, "UPDATE antrean_email SET status = 1 WHERE id = '{$row['id']}'");
     
     if (kirimEmail($row['email_tujuan'], $row['nama_tujuan'], $row['subjek'], $row['pesan_html'])) {
         pg_query($conn, "DELETE FROM antrean_email WHERE id = '{$row['id']}'");
-        $log_aktivitas .= "<div class='mb-2 text-danger fw-bold'><i class='bi bi-trash-fill me-2'></i>Pembatalan terkirim ke: <span class='text-dark'>{$row['email_tujuan']}</span></div>";
+        $log_aktivitas .= "<div class='mb-2 text-primary fw-bold'><i class='bi bi-send-fill me-2'></i>Notifikasi Info terkirim ke: <span class='text-dark'>{$row['email_tujuan']}</span></div>";
     } else {
         pg_query($conn, "UPDATE antrean_email SET status = 0 WHERE id = '{$row['id']}'");
     }
 }
 
-// ==========================================
-// TAMPILAN OUTPUT LOG (UI RAPIH DENGAN BOOTSTRAP)
-// ==========================================
+// TAMPILAN OUTPUT LOG
 echo '<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>Log E-VISION Mailer</title>';
 echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">';
 echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">';
@@ -197,6 +190,5 @@ if ($log_aktivitas == "") {
     echo $log_aktivitas;
     echo "</div>";
 }
-
 echo '</body></html>';
 ?>
