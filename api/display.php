@@ -34,14 +34,15 @@ date_default_timezone_set('Asia/Jakarta');
         .header-section {
             display: flex;
             justify-content: space-between;
-            align-items: center; 
+            align-items: flex-start; /* Ubah ke flex-start biar sejajar dari atas */
             margin-bottom: 20px; 
             padding-bottom: 15px;
             border-bottom: 2px solid #e2e8f0;
         }
 
         /* --- CSS LOGO GAMBAR WARNA-WARNI (MENGGUNAKAN 2 FILE) --- */
-        .brand-box .logo-split-container { 
+        /* Hapus .brand-box di depannya biar bisa dipake di kanan juga */
+        .logo-split-container { 
             height: 45px; /* Sesuaikan ukuran tinggi logo di sini */
             display: flex;
             align-items: center;
@@ -136,16 +137,24 @@ date_default_timezone_set('Asia/Jakarta');
         /* --- PERBAIKAN TEKS AGAR TAJAM --- */
         .meeting-title { font-weight: 700; color: var(--text-dark); font-size: 1.1rem; }
         .meeting-time { font-weight: 600; color: var(--accent-green); }
+        
+        /* WADAH KANAN BARU */
+        .right-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* Rata Kanan */
+            gap: 15px; /* Jarak antara logo dan jam */
+        }
     </style>
 </head>
 <body>
 
 <div class="display-container">
     <div class="header-section">
+        
         <div class="brand-box">
-            
             <div class="logo-split-container">
-                <img src="logo_e.png" alt="E-" class="logo-part-e">
+                <img src="logo_energia.png" alt="E-" class="logo-part-e">
                 <img src="logo_vision.png" alt="VISION" class="logo-part-vision">
             </div>
             
@@ -168,7 +177,15 @@ date_default_timezone_set('Asia/Jakarta');
                 </div>
             </div>
         </div>
-        <div class="clock-box" id="digital-clock">00:00:00</div>
+
+        <div class="right-box">
+            <div class="logo-split-container" style="margin-bottom: 0;">
+                <img src="logo_energia.png" alt="Logo Kanan" class="logo-part-e">
+                <img src="logo_vision.png" alt="Logo Kanan" class="logo-part-vision">
+            </div>
+            <div class="clock-box" id="digital-clock">00:00:00</div>
+        </div>
+
     </div>
     
     <div id="data-meeting">
