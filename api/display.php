@@ -34,7 +34,7 @@ date_default_timezone_set('Asia/Jakarta');
         .header-section {
             display: flex;
             justify-content: space-between;
-            align-items: stretch; /* <--- UBAH JADI STRETCH BIAR TINGGI KANAN = KIRI */
+            align-items: stretch; /* TINGGI KANAN = KIRI */
             margin-bottom: 20px; 
             padding-bottom: 15px;
             border-bottom: 2px solid #e2e8f0;
@@ -148,7 +148,7 @@ date_default_timezone_set('Asia/Jakarta');
             display: flex;
             flex-direction: column;
             align-items: flex-end; 
-            justify-content: space-between; /* <--- INI KUNCINYA BIAR JAM KEDORONG MENTOK BAWAH */
+            justify-content: space-between; /* JAM KEDORONG MENTOK BAWAH SEJAJAR KIRI */
         }
     </style>
 </head>
@@ -157,7 +157,6 @@ date_default_timezone_set('Asia/Jakarta');
 <div class="display-container">
     <div class="header-section">
         
-        <!-- BAGIAN KIRI -->
         <div class="brand-box">
             <div class="logo-split-container">
                 <img src="logo_e.png" alt="E-" class="logo-part-e">
@@ -184,10 +183,8 @@ date_default_timezone_set('Asia/Jakarta');
             </div>
         </div>
 
-        <!-- BAGIAN KANAN (Logo Tambahan Asli 1 File + Jam Mentok Bawah) -->
         <div class="right-box">
             <div class="logo-asli-container">
-                <!-- GANTI "logo_instansi.png" SAMA NAMA FILE LOGO ENERGIA LU -->
                 <img src="logo_energia.png" alt="Logo Kanan">
             </div>
             <div class="clock-box" id="digital-clock">00:00:00</div>
@@ -210,6 +207,9 @@ date_default_timezone_set('Asia/Jakarta');
         const card = document.getElementById(elementId);
         const icon = document.getElementById(iconId);
         
+        // Proteksi jika data kosong/null agar tidak merusak JS
+        if (code === undefined || code === null) return;
+        
         card.classList.remove('weather-sunny', 'weather-cloudy', 'weather-rainy');
         
         if (code === 0 || code === 1) { 
@@ -225,14 +225,21 @@ date_default_timezone_set('Asia/Jakarta');
     }
 
     function updateWeather() {
-        fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2088&longitude=106.8456&current_weather=true&daily=temperature_2m_max,weathercode&timezone=Asia%2FJakarta')
+        // PERBAIKAN: Memanggil parameter weather_code dan weathercode sekaligus agar aman
+        fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2088&longitude=106.8456&current_weather=true&daily=temperature_2m_max,weather_code,weathercode&timezone=Asia%2FJakarta')
             .then(response => response.json())
             .then(data => {
-                document.getElementById('temp-today').innerText = Math.round(data.current_weather.temperature) + '°C';
-                applyWeatherStyle('card-today', 'icon-today', data.current_weather.weathercode);
+                // Ambil Data Hari Ini dengan Proteksi Nama Kolom Baru/Lama
+                const current = data.current_weather;
+                const codeToday = (current.weather_code !== undefined) ? current.weather_code : current.weathercode;
+                document.getElementById('temp-today').innerText = Math.round(current.temperature) + '°C';
+                applyWeatherStyle('card-today', 'icon-today', codeToday);
                 
-                document.getElementById('temp-tomorrow').innerText = Math.round(data.daily.temperature_2m_max[1]) + '°C';
-                applyWeatherStyle('card-tomorrow', 'icon-tomorrow', data.daily.weathercode[1]);
+                // Ambil Data Besok dengan Proteksi Nama Kolom Baru/Lama
+                const daily = data.daily;
+                const codeTomorrow = (daily.weather_code !== undefined) ? daily.weather_code[1] : daily.weathercode[1];
+                document.getElementById('temp-tomorrow').innerText = Math.round(daily.temperature_2m_max[1]) + '°C';
+                applyWeatherStyle('card-tomorrow', 'icon-tomorrow', codeTomorrow);
             })
             .catch(err => console.error("Gagal cuaca:", err));
     }
