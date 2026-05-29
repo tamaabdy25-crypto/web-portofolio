@@ -454,7 +454,7 @@ $query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role
               </div>
               <div class="mb-3">
                   <label class="form-label">Alamat Email</label>
-                  <input type="email" name="email" class="form-control" placeholder="karyawan@e-vision.com" required>
+                  <input type="email" name="email" class="form-control" placeholder="example@gmail.com" required>
               </div>
               <div class="row">
                   <div class="col-md-6 mb-3">
