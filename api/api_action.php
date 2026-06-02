@@ -141,6 +141,13 @@ if ($action == 'edit') {
             $update = @pg_query($conn, "UPDATE meetings SET title='$title', room_name='$room', meeting_date='$date', start_time='$start', end_time='$end' WHERE id='$id_edit'");
             
             if ($update) {
+                // 💡 CEK DULU APAKAH MEETING INI SUDAH DI ARSIP/SELESAI?
+                $q_cek = @pg_query($conn, "SELECT is_finished FROM meetings WHERE id='$id_edit'");
+                $r_cek = pg_fetch_assoc($q_cek);
+                $is_fin = $r_cek['is_finished'];
+                // Konversi aman format boolean postgresql
+                $is_selesai = ($is_fin === 't' || $is_fin === '1' || $is_fin === true || $is_fin == 1);
+
                 $peserta_baru = [];
                 if (isset($_POST['peserta']) && is_array($_POST['peserta'])) {
                     foreach ($_POST['peserta'] as $p) {
@@ -172,33 +179,36 @@ if ($action == 'edit') {
                     foreach ($peserta_dihapus as $id_kick) {
                         $id_kick = pg_escape_string($conn, $id_kick);
                         
-                        $q_korban = @pg_query($conn, "SELECT nama_lengkap, email FROM users WHERE id = '$id_kick'");
-                        if($r_korban = pg_fetch_assoc($q_korban)) {
-                            $nama_korban = $r_korban['nama_lengkap'];
-                            $email_korban = $r_korban['email'];
-                            
-                            if (!empty($email_korban)) {
-                                $subject = "Undangan Dibatalkan: " . $title;
-                                $message = "
-                                <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 500px;'>
-                                    <h3 style='color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 10px;'>UNDANGAN DIBATALKAN </h3>
-                                    <p>Halo, <b>$nama_korban</b>!</p>
-                                    <p>Mohon maaf, Anda telah <b>dihapus dari daftar peserta</b> untuk agenda meeting berikut:</p>
-                                    <table border='0' cellpadding='6' style='background: #fef2f2; width: 100%; border-radius: 8px;'>
-                                        <tr><td width='30%'><b>Agenda</b></td><td>: $title</td></tr>
-                                        <tr><td><b>Tanggal</b></td><td>: $date</td></tr>
-                                        <tr><td><b>Waktu</b></td><td>: " . substr($start, 0, 5) . " - " . substr($end, 0, 5) . " WIB</td></tr>
-                                        <tr><td><b>Ruangan</b></td><td>: $room</td></tr>
-                                    </table>
-                                    <p style='margin-top: 20px;'>Silakan abaikan undangan sebelumnya. Mohon maklum atas perubahan jadwal ini.</p>
-                                </div>
-                                ";
+                        // 💡 CUMA KIRIM EMAIL KALO MEETING MASIH AKTIF
+                        if (!$is_selesai) {
+                            $q_korban = @pg_query($conn, "SELECT nama_lengkap, email FROM users WHERE id = '$id_kick'");
+                            if($r_korban = pg_fetch_assoc($q_korban)) {
+                                $nama_korban = $r_korban['nama_lengkap'];
+                                $email_korban = $r_korban['email'];
+                                
+                                if (!empty($email_korban)) {
+                                    $subject = "Undangan Dibatalkan: " . $title;
+                                    $message = "
+                                    <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 500px;'>
+                                        <h3 style='color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 10px;'>UNDANGAN DIBATALKAN </h3>
+                                        <p>Halo, <b>$nama_korban</b>!</p>
+                                        <p>Mohon maaf, Anda telah <b>dihapus dari daftar peserta</b> untuk agenda meeting berikut:</p>
+                                        <table border='0' cellpadding='6' style='background: #fef2f2; width: 100%; border-radius: 8px;'>
+                                            <tr><td width='30%'><b>Agenda</b></td><td>: $title</td></tr>
+                                            <tr><td><b>Tanggal</b></td><td>: $date</td></tr>
+                                            <tr><td><b>Waktu</b></td><td>: " . substr($start, 0, 5) . " - " . substr($end, 0, 5) . " WIB</td></tr>
+                                            <tr><td><b>Ruangan</b></td><td>: $room</td></tr>
+                                        </table>
+                                        <p style='margin-top: 20px;'>Silakan abaikan undangan sebelumnya. Mohon maklum atas perubahan jadwal ini.</p>
+                                    </div>
+                                    ";
 
-                                $em = pg_escape_string($conn, $email_korban);
-                                $nm = pg_escape_string($conn, $nama_korban);
-                                $sb = pg_escape_string($conn, $subject);
-                                $ps = pg_escape_string($conn, $message);
-                                @pg_query($conn, "INSERT INTO antrean_email (email_tujuan, nama_tujuan, subjek, pesan_html) VALUES ('$em', '$nm', '$sb', '$ps')");
+                                    $em = pg_escape_string($conn, $email_korban);
+                                    $nm = pg_escape_string($conn, $nama_korban);
+                                    $sb = pg_escape_string($conn, $subject);
+                                    $ps = pg_escape_string($conn, $message);
+                                    @pg_query($conn, "INSERT INTO antrean_email (email_tujuan, nama_tujuan, subjek, pesan_html) VALUES ('$em', '$nm', '$sb', '$ps')");
+                                }
                             }
                         }
 
@@ -212,36 +222,36 @@ if ($action == 'edit') {
                     $cek_peserta = @pg_query($conn, "SELECT id FROM agenda_peserta WHERE id_agenda='$id_edit' AND id_user='$id_karyawan'");
                     
                     if (pg_num_rows($cek_peserta) == 0) {
-                        // Kalau peserta benar-benar baru, biar cron yang ngirim undangan awal
                         @pg_query($conn, "INSERT INTO agenda_peserta (id_agenda, id_user, email_terkirim_undangan, email_terkirim_pengingat) VALUES ('$id_edit', '$id_karyawan', FALSE, FALSE)");
                     } else {
-                        // 💡 LOGIKA SAKTI: Kalau peserta LAMA, kirimin email pemberitahuan JADWAL DIUPDATE!
-                        $q_info = @pg_query($conn, "SELECT nama_lengkap, email FROM users WHERE id='$id_karyawan'");
-                        if($r_info = pg_fetch_assoc($q_info)) {
-                            $em = pg_escape_string($conn, $r_info['email']);
-                            $nm = pg_escape_string($conn, $r_info['nama_lengkap']);
-                            
-                            if (!empty($em)) {
-                                $sb_update = "UPDATE JADWAL MEETING: " . $title;
-                                $ps_update = "
-                                <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #f59e0b; border-radius: 10px; max-width: 500px;'>
-                                    <h3 style='color: #f59e0b; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;'>JADWAL DIPERBARUI</h3>
-                                    <p>Halo, <b>$nm</b>!</p>
-                                    <p>Terdapat <b>perubahan jadwal atau ruangan</b> pada meeting yang Anda ikuti. Berikut adalah detail terbarunya:</p>
-                                    <table border='0' cellpadding='6' style='background: #fffbeb; width: 100%; border-radius: 8px;'>
-                                        <tr><td width='30%'><b>Agenda</b></td><td>: $title</td></tr>
-                                        <tr><td><b>Tanggal</b></td><td>: $date</td></tr>
-                                        <tr><td><b>Waktu</b></td><td>: " . substr($start, 0, 5) . " - " . substr($end, 0, 5) . " WIB</td></tr>
-                                        <tr><td><b>Ruangan</b></td><td>: $room</td></tr>
-                                    </table>
-                                    <p style='margin-top: 20px;'>Mohon sesuaikan jadwal Anda dengan informasi terbaru ini. Terima kasih!</p>
-                                </div>";
+                        // 💡 CUMA KIRIM EMAIL JADWAL UPDATE KALO MEETING MASIH AKTIF
+                        if (!$is_selesai) {
+                            $q_info = @pg_query($conn, "SELECT nama_lengkap, email FROM users WHERE id='$id_karyawan'");
+                            if($r_info = pg_fetch_assoc($q_info)) {
+                                $em = pg_escape_string($conn, $r_info['email']);
+                                $nm = pg_escape_string($conn, $r_info['nama_lengkap']);
                                 
-                                $ps_update = pg_escape_string($conn, $ps_update);
-                                @pg_query($conn, "INSERT INTO antrean_email (email_tujuan, nama_tujuan, subjek, pesan_html) VALUES ('$em', '$nm', '$sb_update', '$ps_update')");
-                                
-                                // Reset pengingat supaya nanti tetep dapet reminder 5 menit sebelum jadwal baru
-                                @pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = FALSE WHERE id_agenda='$id_edit' AND id_user='$id_karyawan'");
+                                if (!empty($em)) {
+                                    $sb_update = "UPDATE JADWAL MEETING: " . $title;
+                                    $ps_update = "
+                                    <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #f59e0b; border-radius: 10px; max-width: 500px;'>
+                                        <h3 style='color: #f59e0b; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;'>JADWAL DIPERBARUI</h3>
+                                        <p>Halo, <b>$nm</b>!</p>
+                                        <p>Terdapat <b>perubahan jadwal atau ruangan</b> pada meeting yang Anda ikuti. Berikut adalah detail terbarunya:</p>
+                                        <table border='0' cellpadding='6' style='background: #fffbeb; width: 100%; border-radius: 8px;'>
+                                            <tr><td width='30%'><b>Agenda</b></td><td>: $title</td></tr>
+                                            <tr><td><b>Tanggal</b></td><td>: $date</td></tr>
+                                            <tr><td><b>Waktu</b></td><td>: " . substr($start, 0, 5) . " - " . substr($end, 0, 5) . " WIB</td></tr>
+                                            <tr><td><b>Ruangan</b></td><td>: $room</td></tr>
+                                        </table>
+                                        <p style='margin-top: 20px;'>Mohon sesuaikan jadwal Anda dengan informasi terbaru ini. Terima kasih!</p>
+                                    </div>";
+                                    
+                                    $ps_update = pg_escape_string($conn, $ps_update);
+                                    @pg_query($conn, "INSERT INTO antrean_email (email_tujuan, nama_tujuan, subjek, pesan_html) VALUES ('$em', '$nm', '$sb_update', '$ps_update')");
+                                    
+                                    @pg_query($conn, "UPDATE agenda_peserta SET email_terkirim_pengingat = FALSE WHERE id_agenda='$id_edit' AND id_user='$id_karyawan'");
+                                }
                             }
                         }
                     }
@@ -267,46 +277,54 @@ if ($action == 'edit') {
 if ($action == 'hapus') {
     $id = pg_escape_string($conn, $_POST['id']);
 
-    $q_meet = @pg_query($conn, "SELECT title, meeting_date, room_name, start_time, end_time FROM meetings WHERE id='$id'");
+    // 💡 AMBIL DATA MEETING SEKALIGUS CEK APAKAH SUDAH SELESAI/ARSIP
+    $q_meet = @pg_query($conn, "SELECT title, meeting_date, room_name, start_time, end_time, is_finished FROM meetings WHERE id='$id'");
     if ($r_meet = pg_fetch_assoc($q_meet)) {
         $title = $r_meet['title'];
         $date  = $r_meet['meeting_date'];
         $room  = $r_meet['room_name'];
         $start = substr($r_meet['start_time'], 0, 5);
         $end   = substr($r_meet['end_time'], 0, 5);
-
-        $q_peserta = @pg_query($conn, "
-            SELECT u.nama_lengkap, u.email FROM agenda_peserta ap JOIN users u ON ap.id_user = u.id WHERE ap.id_agenda='$id'
-            UNION 
-            SELECT nama_lengkap, email FROM users WHERE id='$my_id'
-        ");
         
-        while ($r_peserta = pg_fetch_assoc($q_peserta)) {
-            $nama_peserta = $r_peserta['nama_lengkap'];
-            $email_peserta = $r_peserta['email'];
+        $is_fin = $r_meet['is_finished'];
+        // Konversi aman format boolean postgresql
+        $is_selesai = ($is_fin === 't' || $is_fin === '1' || $is_fin === true || $is_fin == 1);
 
-            if (!empty($email_peserta)) {
-                $subject = "MEETING DIBATALKAN: " . $title;
-                $message = "
-                <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 500px;'>
-                    <h3 style='color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 10px;'>MEETING DIBATALKAN </h3>
-                    <p>Halo, <b>$nama_peserta</b>!</p>
-                    <p>Mohon maaf, agenda meeting berikut ini telah <b>dibatalkan sepenuhnya</b> oleh penyelenggara:</p>
-                    <table border='0' cellpadding='6' style='background: #fef2f2; width: 100%; border-radius: 8px;'>
-                        <tr><td width='30%'><b>Agenda</b></td><td>: $title</td></tr>
-                        <tr><td><b>Tanggal</b></td><td>: $date</td></tr>
-                        <tr><td><b>Waktu</b></td><td>: $start - $end WIB</td></tr>
-                        <tr><td><b>Ruangan</b></td><td>: $room</td></tr>
-                    </table>
-                    <p style='margin-top: 20px;'>Mohon sesuaikan kembali jadwal Anda. Terima kasih atas pengertiannya.</p>
-                </div>
-                ";
+        // 💡 KUNCI JAWABAN: CUMA KIRIM EMAIL BATAL KALAU MEETING MASIH AKTIF (Belum Masuk Arsip)
+        if (!$is_selesai) {
+            $q_peserta = @pg_query($conn, "
+                SELECT u.nama_lengkap, u.email FROM agenda_peserta ap JOIN users u ON ap.id_user = u.id WHERE ap.id_agenda='$id'
+                UNION 
+                SELECT nama_lengkap, email FROM users WHERE id='$my_id'
+            ");
+            
+            while ($r_peserta = pg_fetch_assoc($q_peserta)) {
+                $nama_peserta = $r_peserta['nama_lengkap'];
+                $email_peserta = $r_peserta['email'];
 
-                $em = pg_escape_string($conn, $email_peserta);
-                $nm = pg_escape_string($conn, $nama_peserta);
-                $sb = pg_escape_string($conn, $subject);
-                $ps = pg_escape_string($conn, $message);
-                @pg_query($conn, "INSERT INTO antrean_email (email_tujuan, nama_tujuan, subjek, pesan_html) VALUES ('$em', '$nm', '$sb', '$ps')");
+                if (!empty($email_peserta)) {
+                    $subject = "MEETING DIBATALKAN: " . $title;
+                    $message = "
+                    <div style='font-family: Arial, sans-serif; color: #333; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 500px;'>
+                        <h3 style='color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 10px;'>MEETING DIBATALKAN </h3>
+                        <p>Halo, <b>$nama_peserta</b>!</p>
+                        <p>Mohon maaf, agenda meeting berikut ini telah <b>dibatalkan sepenuhnya</b> oleh penyelenggara:</p>
+                        <table border='0' cellpadding='6' style='background: #fef2f2; width: 100%; border-radius: 8px;'>
+                            <tr><td width='30%'><b>Agenda</b></td><td>: $title</td></tr>
+                            <tr><td><b>Tanggal</b></td><td>: $date</td></tr>
+                            <tr><td><b>Waktu</b></td><td>: $start - $end WIB</td></tr>
+                            <tr><td><b>Ruangan</b></td><td>: $room</td></tr>
+                        </table>
+                        <p style='margin-top: 20px;'>Mohon sesuaikan kembali jadwal Anda. Terima kasih atas pengertiannya.</p>
+                    </div>
+                    ";
+
+                    $em = pg_escape_string($conn, $email_peserta);
+                    $nm = pg_escape_string($conn, $nama_peserta);
+                    $sb = pg_escape_string($conn, $subject);
+                    $ps = pg_escape_string($conn, $message);
+                    @pg_query($conn, "INSERT INTO antrean_email (email_tujuan, nama_tujuan, subjek, pesan_html) VALUES ('$em', '$nm', '$sb', '$ps')");
+                }
             }
         }
     }
