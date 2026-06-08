@@ -102,11 +102,28 @@
         /* Header Hari */
         .fc-theme-standard th { 
             background-color: #f8fafc; border-color: #e2e8f0; padding: 14px 0; 
-            color: #64748b; text-transform: uppercase; font-size: 12px; font-weight: 700;
+            text-transform: uppercase; font-size: 12px; font-weight: 700;
             border-bottom: 2px solid #e2e8f0 !important;
         }
-        .fc-col-header-cell.fc-day-today { background-color: rgba(16, 185, 129, 0.05); color: var(--theme-primary); }
-        .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion { color: var(--theme-primary); font-weight: 800; }
+        
+        /* 💡 FIX 1: TANGGALAN BIAR GAK JADI LINK BIRU WARNET */
+        .fc-col-header-cell-cushion { 
+            color: #64748b !important; 
+            text-decoration: none !important; 
+            transition: color 0.2s;
+        }
+        .fc-col-header-cell-cushion:hover { 
+            color: var(--theme-primary) !important; 
+        }
+
+        /* 💡 FIX 2: BACKGROUND HARI INI NGIKUTIN TEMA (BUKAN IJO KAKU) */
+        .fc-col-header-cell.fc-day-today { 
+            background-color: color-mix(in srgb, var(--theme-primary) 8%, white) !important; 
+        }
+        .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion { 
+            color: var(--theme-primary) !important; 
+            font-weight: 800; 
+        }
 
         /* UI JAM DI SEBELAH KIRI */
         .fc-timegrid-slot-label-cushion { 
