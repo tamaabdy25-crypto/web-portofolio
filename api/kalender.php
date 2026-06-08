@@ -1,3 +1,18 @@
+<?php
+// Pastikan session dan koneksi database udah dipanggil
+session_start();
+include 'koneksi.php'; // Sesuaikan dengan file koneksi lu
+
+$my_id = $_SESSION['user_id'] ?? 0;
+$nama_user = $_SESSION['nama'] ?? 'User'; // Sesuaikan session nama lu
+
+// --- KODE DARI LU: AMBIL WALLPAPER & FOTO PROFIL ---
+$q_user = pg_query($conn, "SELECT theme_wallpaper, foto_profil FROM users WHERE id = '$my_id'");
+$data_user = pg_fetch_assoc($q_user);
+$user_wallpaper = $data_user['theme_wallpaper'] ?? "";
+$user_foto = $data_user['foto_profil'] ?? "";
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -106,7 +121,7 @@
             border-bottom: 2px solid #e2e8f0 !important;
         }
         
-        /* 💡 FIX 1: TANGGALAN BIAR GAK JADI LINK BIRU WARNET */
+        /* FIX 1: TANGGALAN BIAR GAK JADI LINK BIRU WARNET */
         .fc-col-header-cell-cushion { 
             color: #64748b !important; 
             text-decoration: none !important; 
@@ -116,7 +131,7 @@
             color: var(--theme-primary) !important; 
         }
 
-        /* 💡 FIX 2: BACKGROUND HARI INI NGIKUTIN TEMA (BUKAN IJO KAKU) */
+        /* FIX 2: BACKGROUND HARI INI NGIKUTIN TEMA (BUKAN IJO KAKU) */
         .fc-col-header-cell.fc-day-today { 
             background-color: color-mix(in srgb, var(--theme-primary) 8%, white) !important; 
         }
@@ -169,10 +184,9 @@
     </style>
     
     <script>
-        const currentWp = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
-        const savedWp = localStorage.getItem('evision_wp_final');
-        const savedColor = localStorage.getItem('evision_color_final');
-        if(currentWp && currentWp === savedWp && savedColor) {
+        // KUNCI: Nyedot warna dari fitur ganti tema Dashboard
+        const savedColor = localStorage.getItem('evision_color_final'); 
+        if(savedColor) {
             document.documentElement.style.setProperty('--theme-primary', savedColor);
         }
     </script>    
@@ -187,10 +201,24 @@
             <span class="text-secondary fw-medium ms-2 border-start ps-2 header-title-text" style="font-size: 18px;">Kalender Agenda</span>
         </div>
         
-        <!-- BAGIAN KANAN: Kembali Bersih, Cuma Tombol Kembali Doang -->
-        <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
-            <i class="bi bi-arrow-left me-1"></i> Kembali
-        </a>
+        <div class="d-flex align-items-center gap-3">
+            <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+            
+            <div class="dropdown">
+                <button class="btn btn-light rounded-pill border shadow-sm d-flex align-items-center px-2 py-1" type="button" data-bs-toggle="dropdown" style="background: rgba(255,255,255,0.9);">
+                    <?php 
+                        // Fallback aman kalau user belum upload foto
+                        $foto_tampil = !empty($user_foto) ? $user_foto : 'https://ui-avatars.com/api/?name=' . urlencode($nama_user) . '&background=random';
+                    ?>
+                    <img src="<?php echo htmlspecialchars($foto_tampil); ?>" alt="PP" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover; border: 1px solid #e2e8f0;">
+                    <span class="fw-bold fs-6 me-1 text-dark"><?php echo htmlspecialchars($nama_user); ?></span>
+                    <i class="bi bi-caret-down-fill text-muted" style="font-size: 10px;"></i>
+                </button>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -201,42 +229,9 @@
 </div>
 
 </div> 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+
 <script>
-const wallpaperPath = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
-
-if (wallpaperPath) {
-    const savedWp = localStorage.getItem('evision_wp_final');
-    const savedColor = localStorage.getItem('evision_color_final');
-
-    if (savedWp === wallpaperPath && savedColor) {
-        document.documentElement.style.setProperty('--theme-primary', savedColor);
-    } else {
-        const img = new Image();
-        img.crossOrigin = "Anonymous";
-        
-        img.onload = function() {
-            try {
-                const colorThief = new ColorThief();
-                const color = colorThief.getColor(img);
-                let r = color[0], g = color[1], b = color[2];
-                let brightness = (r * 299 + g * 587 + b * 114) / 1000;
-                
-                if (brightness > 180) { r = 30; g = 41; b = 59; }
-                const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
-                
-                document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
-                localStorage.setItem('evision_wp_final', wallpaperPath);
-                localStorage.setItem('evision_color_final', dynamicRGB);
-            } catch (e) {
-                console.error("Gagal ekstrak warna dari wallpaper:", e);
-            }
-        };
-        img.src = wallpaperPath; 
-    }
-}
-
-// --- INISIALISASI FULLCALENDAR ---
+// --- INISIALISASI FULLCALENDAR (BERSIH DARI COLOR THIEF) ---
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
 
