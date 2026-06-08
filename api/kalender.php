@@ -16,7 +16,7 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     
     <style>
-        :root { --theme-primary: #10b981; } /* Default warna ijo E-VISION */
+        :root { --theme-primary: #10b981; }
 
         body { 
             background-color: #f1f5f9; 
@@ -71,31 +71,35 @@
         .btn-outline-success:hover { background-color: var(--theme-primary) !important; color: white !important; }
 
         /* =========================================================
-           KUSTOMISASI UI KALENDER MSTEAMS / OUTLOOK (PREMIUM)
+           KUSTOMISASI UI KALENDER DIKEMBALIKAN KE MS TEAMS (CLEAN)
         ========================================================= */
         #calendar { font-family: 'Inter', sans-serif; color: #334155; }
         
         .fc .fc-toolbar-title { font-weight: 700; color: #0f172a; font-size: 1.4rem; letter-spacing: -0.5px; }
         
-        /* TOMBOL KALENDER NGIKUTIN TEMA DINAMIS */
+        /* Tombolnya balik abu-abu elegan */
         .fc .fc-button-primary { 
-            background-color: var(--theme-primary) !important; 
-            border-color: var(--theme-primary) !important; 
-            color: #ffffff !important;
+            background-color: #f1f5f9 !important; 
+            border: 1px solid #cbd5e1 !important; 
+            color: #475569 !important;
             font-weight: 600; 
             text-transform: capitalize;
             border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
             padding: 6px 14px;
             transition: all 0.2s ease;
         }
-        .fc .fc-button-primary:hover { opacity: 0.85; }
+        .fc .fc-button-primary:hover { background-color: #e2e8f0 !important; color: #0f172a !important; }
+        
+        /* Pas tombol DITEKAN / AKTIF, baru pakai warna tema lu */
         .fc .fc-button-active { 
-            box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.2) !important; 
-            border-color: transparent !important; 
+            background-color: var(--theme-primary) !important; 
+            border-color: var(--theme-primary) !important; 
+            color: #fff !important; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important;
         }
         
-        /* Header Hari (Sen, Sel, Rab, dll) */
+        /* Header Hari */
         .fc-theme-standard th { 
             background-color: #f8fafc; border-color: #e2e8f0; padding: 14px 0; 
             color: #64748b; text-transform: uppercase; font-size: 12px; font-weight: 700;
@@ -104,7 +108,7 @@
         .fc-col-header-cell.fc-day-today { background-color: rgba(16, 185, 129, 0.05); color: var(--theme-primary); }
         .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion { color: var(--theme-primary); font-weight: 800; }
 
-        /* UI JAM DI SEBELAH KIRI (Biar Awam Paham) */
+        /* UI JAM DI SEBELAH KIRI */
         .fc-timegrid-slot-label-cushion { 
             font-size: 13px; font-weight: 600; color: #64748b; padding-right: 10px !important; 
         }
@@ -113,7 +117,7 @@
             font-size: 10px; font-weight: 500; opacity: 0.7;
         }
         
-        /* GARIS WAKTU BERGERAK (REAL-TIME INDICATOR) */
+        /* GARIS WAKTU BERGERAK */
         .fc-timegrid-now-indicator-line { border-color: #ef4444; border-width: 2px; }
         .fc-timegrid-now-indicator-arrow { border-color: #ef4444; background-color: #ef4444; border-width: 5px; }
         
@@ -166,34 +170,10 @@
             <span class="text-secondary fw-medium ms-2 border-start ps-2 header-title-text" style="font-size: 18px;">Kalender Agenda</span>
         </div>
         
-        <!-- BAGIAN KANAN: Tombol Kembali & Profil User -->
-        <div class="d-flex align-items-center gap-3">
-            <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
-                <i class="bi bi-arrow-left me-1"></i> Kembali
-            </a>
-            
-            <?php
-                // Ambil data session lu untuk PP dan Nama
-                // Ganti $_SESSION['nama'] atau foto sesuai dengan struktur login lu ya!
-                $nama_user = $_SESSION['nama'] ?? 'User'; 
-                
-                // Cek apakah user punya foto di database, kalo kosong kasih foto default
-                // Pastikan nama session foto-nya bener!
-                if (!empty($_SESSION['foto_profil'])) {
-                    $pp_path = $_SESSION['foto_profil'];
-                } else {
-                    $pp_path = 'https://ui-avatars.com/api/?name=' . urlencode($nama_user) . '&background=random'; // Fallback aman
-                }
-            ?>
-            <div class="dropdown">
-                <button class="btn btn-light rounded-pill border shadow-sm d-flex align-items-center px-2 py-1" type="button" data-bs-toggle="dropdown">
-                    <img src="<?php echo htmlspecialchars($pp_path); ?>" alt="PP" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover; border: 1px solid #e2e8f0;">
-                    <span class="fw-bold fs-6 me-1 text-dark"><?php echo htmlspecialchars($nama_user); ?></span>
-                    <i class="bi bi-caret-down-fill text-muted" style="font-size: 10px;"></i>
-                </button>
-            </div>
-        </div>
-        
+        <!-- BAGIAN KANAN: Kembali Bersih, Cuma Tombol Kembali Doang -->
+        <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
+            <i class="bi bi-arrow-left me-1"></i> Kembali
+        </a>
     </div>
 </div>
 
@@ -206,7 +186,6 @@
 </div> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 <script>
-// --- LOGIKA TEMA PINTAR (ANTI GAGAL) ---
 const wallpaperPath = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
 
 if (wallpaperPath) {
@@ -219,7 +198,6 @@ if (wallpaperPath) {
         const img = new Image();
         img.crossOrigin = "Anonymous";
         
-        // Pastikan event onload dideklarasikan SEBELUM src di-set
         img.onload = function() {
             try {
                 const colorThief = new ColorThief();
