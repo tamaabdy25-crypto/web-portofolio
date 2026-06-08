@@ -56,7 +56,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
             transition: background 0.5s ease;
         }
 
-        /* 🔥 FIX: Opacity disamain 100% kaya input.php (0.2) biar buremnya pas! */
+        /* FIX: Opacity disamain 100% kaya input.php (0.2) biar buremnya pas! */
         .page-overlay {
             background: rgba(255, 255, 255, 0.2); 
             min-height: 100vh;
@@ -195,23 +195,10 @@ $user_foto = $data_user['foto_profil'] ?? "";
             <span class="text-secondary fw-medium ms-2 border-start ps-2 header-title-text" style="font-size: 18px;">Kalender Agenda</span>
         </div>
         
-        <div class="d-flex align-items-center gap-3">
-            <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
-                <i class="bi bi-arrow-left me-1"></i> Kembali
-            </a>
-            
-            <div class="dropdown">
-                <button class="btn btn-light rounded-pill border shadow-sm d-flex align-items-center px-2 py-1" type="button" data-bs-toggle="dropdown" style="background: rgba(255,255,255,0.9);">
-                    <?php 
-                        $foto_tampil = !empty($user_foto) ? $user_foto : 'https://ui-avatars.com/api/?name=' . urlencode($nama_user) . '&background=random';
-                    ?>
-                    <img src="<?php echo htmlspecialchars($foto_tampil); ?>" alt="PP" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover; border: 1px solid #e2e8f0;">
-                    <span class="fw-bold fs-6 me-1 text-dark"><?php echo htmlspecialchars($nama_user); ?></span>
-                    <i class="bi bi-caret-down-fill text-muted" style="font-size: 10px;"></i>
-                </button>
-            </div>
-        </div>
-
+        <!-- 🔥 FIX FINAL: Tombol PP beneran ilang, murni tinggal tombol kembali -->
+        <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
+            <i class="bi bi-arrow-left me-1"></i> Kembali
+        </a>
     </div>
 </div>
 
