@@ -33,8 +33,9 @@ $user_foto = $data_user['foto_profil'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
 
+        /* Udah disamain sama warna dasar input.php */
         body { 
-            background-color: #f1f5f9; 
+            background-color: #f8f9fa; 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
         }
@@ -48,15 +49,16 @@ $user_foto = $data_user['foto_profil'] ?? "";
             height: 100vh;
             height: 100dvh; 
             z-index: -99;
-            background-color: #f1f5f9;
+            background-color: #f8f9fa;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             transition: background 0.5s ease;
         }
 
+        /* 🔥 FIX: Opacity disamain 100% kaya input.php (0.2) biar buremnya pas! */
         .page-overlay {
-            background: transparent; /* 🔥 FIX: Kaca film dihapus, background jernih 100% */
+            background: rgba(255, 255, 255, 0.2); 
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -86,13 +88,12 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .btn-outline-success:hover { background-color: var(--theme-primary) !important; color: white !important; }
 
         /* =========================================================
-           KUSTOMISASI UI KALENDER DIKEMBALIKAN KE MS TEAMS (CLEAN)
+           KUSTOMISASI UI KALENDER MS TEAMS
         ========================================================= */
         #calendar { font-family: 'Inter', sans-serif; color: #334155; }
         
         .fc .fc-toolbar-title { font-weight: 700; color: #0f172a; font-size: 1.4rem; letter-spacing: -0.5px; }
         
-        /* Tombolnya balik abu-abu elegan */
         .fc .fc-button-primary { 
             background-color: #f1f5f9 !important; 
             border: 1px solid #cbd5e1 !important; 
@@ -106,7 +107,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
         }
         .fc .fc-button-primary:hover { background-color: #e2e8f0 !important; color: #0f172a !important; }
         
-        /* Pas tombol DITEKAN / AKTIF, baru pakai warna tema lu */
         .fc .fc-button-active { 
             background-color: var(--theme-primary) !important; 
             border-color: var(--theme-primary) !important; 
@@ -114,14 +114,12 @@ $user_foto = $data_user['foto_profil'] ?? "";
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important;
         }
         
-        /* Header Hari */
         .fc-theme-standard th { 
             background-color: #f8fafc; border-color: #e2e8f0; padding: 14px 0; 
             text-transform: uppercase; font-size: 12px; font-weight: 700;
             border-bottom: 2px solid #e2e8f0 !important;
         }
         
-        /* FIX 1: TANGGALAN BIAR GAK JADI LINK BIRU WARNET */
         .fc-col-header-cell-cushion { 
             color: #64748b !important; 
             text-decoration: none !important; 
@@ -131,7 +129,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
             color: var(--theme-primary) !important; 
         }
 
-        /* FIX 2: BACKGROUND HARI INI NGIKUTIN TEMA (BUKAN IJO KAKU) */
         .fc-col-header-cell.fc-day-today { 
             background-color: color-mix(in srgb, var(--theme-primary) 8%, white) !important; 
         }
@@ -140,7 +137,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
             font-weight: 800; 
         }
 
-        /* UI JAM DI SEBELAH KIRI */
         .fc-timegrid-slot-label-cushion { 
             font-size: 13px; font-weight: 600; color: #64748b; padding-right: 10px !important; 
         }
@@ -149,11 +145,9 @@ $user_foto = $data_user['foto_profil'] ?? "";
             font-size: 10px; font-weight: 500; opacity: 0.7;
         }
         
-        /* GARIS WAKTU BERGERAK */
         .fc-timegrid-now-indicator-line { border-color: #ef4444; border-width: 2px; }
         .fc-timegrid-now-indicator-arrow { border-color: #ef4444; background-color: #ef4444; border-width: 5px; }
         
-        /* Modifikasi Blok Event */
         .fc-timegrid-event {
             border-radius: 6px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -201,9 +195,23 @@ $user_foto = $data_user['foto_profil'] ?? "";
             <span class="text-secondary fw-medium ms-2 border-start ps-2 header-title-text" style="font-size: 18px;">Kalender Agenda</span>
         </div>
         
-        <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
-            <i class="bi bi-arrow-left me-1"></i> Kembali
-        </a>
+        <div class="d-flex align-items-center gap-3">
+            <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+            
+            <div class="dropdown">
+                <button class="btn btn-light rounded-pill border shadow-sm d-flex align-items-center px-2 py-1" type="button" data-bs-toggle="dropdown" style="background: rgba(255,255,255,0.9);">
+                    <?php 
+                        $foto_tampil = !empty($user_foto) ? $user_foto : 'https://ui-avatars.com/api/?name=' . urlencode($nama_user) . '&background=random';
+                    ?>
+                    <img src="<?php echo htmlspecialchars($foto_tampil); ?>" alt="PP" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover; border: 1px solid #e2e8f0;">
+                    <span class="fw-bold fs-6 me-1 text-dark"><?php echo htmlspecialchars($nama_user); ?></span>
+                    <i class="bi bi-caret-down-fill text-muted" style="font-size: 10px;"></i>
+                </button>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -216,7 +224,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
 </div> 
 
 <script>
-// --- INISIALISASI FULLCALENDAR ---
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
 
