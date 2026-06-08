@@ -16,7 +16,7 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     
     <style>
-        :root { --theme-primary: #10b981; }
+        :root { --theme-primary: #10b981; } /* Default warna ijo E-VISION */
 
         body { 
             background-color: #f1f5f9; 
@@ -77,19 +77,23 @@
         
         .fc .fc-toolbar-title { font-weight: 700; color: #0f172a; font-size: 1.4rem; letter-spacing: -0.5px; }
         
+        /* TOMBOL KALENDER NGIKUTIN TEMA DINAMIS */
         .fc .fc-button-primary { 
-            background-color: #f1f5f9 !important; 
-            border: 1px solid #cbd5e1 !important; 
-            color: #475569 !important;
+            background-color: var(--theme-primary) !important; 
+            border-color: var(--theme-primary) !important; 
+            color: #ffffff !important;
             font-weight: 600; 
             text-transform: capitalize;
             border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
             padding: 6px 14px;
             transition: all 0.2s ease;
         }
-        .fc .fc-button-primary:hover { background-color: #e2e8f0 !important; color: #0f172a !important; }
-        .fc .fc-button-active { background-color: var(--theme-primary) !important; border-color: var(--theme-primary) !important; color: #fff !important; }
+        .fc .fc-button-primary:hover { opacity: 0.85; }
+        .fc .fc-button-active { 
+            box-shadow: inset 0 0 0 100px rgba(0, 0, 0, 0.2) !important; 
+            border-color: transparent !important; 
+        }
         
         /* Header Hari (Sen, Sel, Rab, dll) */
         .fc-theme-standard th { 
@@ -100,16 +104,16 @@
         .fc-col-header-cell.fc-day-today { background-color: rgba(16, 185, 129, 0.05); color: var(--theme-primary); }
         .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion { color: var(--theme-primary); font-weight: 800; }
 
-        /* 💡 UI JAM DI SEBELAH KIRI (Biar Awam Paham) */
+        /* UI JAM DI SEBELAH KIRI (Biar Awam Paham) */
         .fc-timegrid-slot-label-cushion { 
             font-size: 13px; font-weight: 600; color: #64748b; padding-right: 10px !important; 
         }
         .fc-timegrid-slot-label-cushion::after {
-            content: ' WIB'; /* Tambahan teks WIB otomatis */
+            content: ' WIB'; 
             font-size: 10px; font-weight: 500; opacity: 0.7;
         }
         
-        /* 💡 GARIS WAKTU BERGERAK (REAL-TIME INDICATOR) */
+        /* GARIS WAKTU BERGERAK (REAL-TIME INDICATOR) */
         .fc-timegrid-now-indicator-line { border-color: #ef4444; border-width: 2px; }
         .fc-timegrid-now-indicator-arrow { border-color: #ef4444; background-color: #ef4444; border-width: 5px; }
         
@@ -161,9 +165,35 @@
             <div class="dynamic-logo" aria-label="E-VISION"></div>
             <span class="text-secondary fw-medium ms-2 border-start ps-2 header-title-text" style="font-size: 18px;">Kalender Agenda</span>
         </div>
-        <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
-            <i class="bi bi-arrow-left me-1"></i> Kembali
-        </a>
+        
+        <!-- BAGIAN KANAN: Tombol Kembali & Profil User -->
+        <div class="d-flex align-items-center gap-3">
+            <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
+            
+            <?php
+                // Ambil data session lu untuk PP dan Nama
+                // Ganti $_SESSION['nama'] atau foto sesuai dengan struktur login lu ya!
+                $nama_user = $_SESSION['nama'] ?? 'User'; 
+                
+                // Cek apakah user punya foto di database, kalo kosong kasih foto default
+                // Pastikan nama session foto-nya bener!
+                if (!empty($_SESSION['foto_profil'])) {
+                    $pp_path = $_SESSION['foto_profil'];
+                } else {
+                    $pp_path = 'https://ui-avatars.com/api/?name=' . urlencode($nama_user) . '&background=random'; // Fallback aman
+                }
+            ?>
+            <div class="dropdown">
+                <button class="btn btn-light rounded-pill border shadow-sm d-flex align-items-center px-2 py-1" type="button" data-bs-toggle="dropdown">
+                    <img src="<?php echo htmlspecialchars($pp_path); ?>" alt="PP" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover; border: 1px solid #e2e8f0;">
+                    <span class="fw-bold fs-6 me-1 text-dark"><?php echo htmlspecialchars($nama_user); ?></span>
+                    <i class="bi bi-caret-down-fill text-muted" style="font-size: 10px;"></i>
+                </button>
+            </div>
+        </div>
+        
     </div>
 </div>
 
@@ -176,26 +206,38 @@
 </div> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 <script>
+// --- LOGIKA TEMA PINTAR (ANTI GAGAL) ---
 const wallpaperPath = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
+
 if (wallpaperPath) {
     const savedWp = localStorage.getItem('evision_wp_final');
     const savedColor = localStorage.getItem('evision_color_final');
 
-    if (wallpaperPath !== savedWp || !savedColor) {
+    if (savedWp === wallpaperPath && savedColor) {
+        document.documentElement.style.setProperty('--theme-primary', savedColor);
+    } else {
         const img = new Image();
-        img.src = wallpaperPath;
         img.crossOrigin = "Anonymous";
+        
+        // Pastikan event onload dideklarasikan SEBELUM src di-set
         img.onload = function() {
-            const colorThief = new ColorThief();
-            const color = colorThief.getColor(img);
-            let r = color[0], g = color[1], b = color[2];
-            let brightness = (r * 299 + g * 587 + b * 114) / 1000;
-            if (brightness > 180) { r = 30; g = 41; b = 59; }
-            const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
-            document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
-            localStorage.setItem('evision_wp_final', wallpaperPath);
-            localStorage.setItem('evision_color_final', dynamicRGB);
+            try {
+                const colorThief = new ColorThief();
+                const color = colorThief.getColor(img);
+                let r = color[0], g = color[1], b = color[2];
+                let brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                
+                if (brightness > 180) { r = 30; g = 41; b = 59; }
+                const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
+                
+                document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
+                localStorage.setItem('evision_wp_final', wallpaperPath);
+                localStorage.setItem('evision_color_final', dynamicRGB);
+            } catch (e) {
+                console.error("Gagal ekstrak warna dari wallpaper:", e);
+            }
         };
+        img.src = wallpaperPath; 
     }
 }
 
@@ -209,17 +251,15 @@ document.addEventListener('DOMContentLoaded', function() {
         locale: 'id', 
         height: 'auto',
         
-        // 💡 1. PENGATURAN WAKTU & TAMPILAN 
         allDaySlot: false, 
         expandRows: true,
-        nowIndicator: true, // 🔴 INI YANG BIKIN GARIS MERAH WAKTU BERGERAK MUNCUL
-        scrollTime: '07:00:00', // Waktu pertama kali kalender di-scroll otomatis pas dibuka
+        nowIndicator: true, 
+        scrollTime: '07:00:00', 
         
-        // 💡 2. FORMAT ANGKA JAM (Jadi "07:00 WIB" / "13:00 WIB")
         slotLabelFormat: {
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false // Paksa pakai format 24 Jam
+            hour12: false 
         },
 
         views: {
@@ -229,11 +269,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
 
-        // 💡 3. TOMBOL KANAN DIHAPUS, SISA KIRI SAMA TENGAH DOANG
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: '' // Tombol di kanan atas hilang!
+            right: '' 
         },
         buttonText: {
             today: 'Hari Ini'
