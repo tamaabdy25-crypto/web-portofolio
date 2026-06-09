@@ -1,16 +1,22 @@
 <?php
-// Pastikan session dan koneksi database udah dipanggil
+date_default_timezone_set('Asia/Jakarta'); // 1. TAMBAHAN: Paksa PHP pakai waktu Indonesia
 session_start();
-include 'koneksi.php'; // Sesuaikan dengan file koneksi lu
+include 'koneksi.php';
+
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: login.php");
+    exit;
+}
 
 $my_id = $_SESSION['user_id'] ?? 0;
-$nama_user = $_SESSION['nama'] ?? 'User'; // Sesuaikan session nama lu
 
-// --- KODE DARI LU: AMBIL WALLPAPER & FOTO PROFIL ---
-$q_user = pg_query($conn, "SELECT theme_wallpaper, foto_profil FROM users WHERE id = '$my_id'");
-$data_user = pg_fetch_assoc($q_user);
-$user_wallpaper = $data_user['theme_wallpaper'] ?? "";
-$user_foto = $data_user['foto_profil'] ?? "";
+// --- AMBIL WALLPAPER USER DARI DATABASE ---
+$q_theme = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
+$data_theme = pg_fetch_assoc($q_theme);
+$user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
+
+// PERHATIKAN: Kode ambil data kalender ($query_kalender) SUDAH DIHAPUS. 
+// Kalender sekarang akan mengambil data lewat file API (api_kalender.php)
 ?>
 
 <!DOCTYPE html>
@@ -26,16 +32,18 @@ $user_foto = $data_user['foto_profil'] ?? "";
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     
     <style>
         :root { --theme-primary: #10b981; }
 
+        /* 💡 PERBAIKAN: Disamain warna dasarnya sama Dashboard */
         body { 
             background-color: #f8f9fa; 
             font-family: 'Inter', sans-serif; 
+            color: #334155; 
             margin: 0; 
         }
         
@@ -56,17 +64,14 @@ $user_foto = $data_user['foto_profil'] ?? "";
         }
 
         .page-overlay {
-            /* 🔥 FIX OPACITY: Disamain jadi 0.2 biar 100% jernih kaya Dashboard */
             background: rgba(255, 255, 255, 0.2); 
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             width: 100%;
         }
-        
-        /* 🔥 FIX HEADER: Tambahan class navbar dari Dashboard biar presisi ngga nge-zoom */
-        .navbar { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); border-bottom: 2px solid #e2e8f0; padding: 15px 0; }
 
+        /* --- LOGO DINAMIS --- */
         .dynamic-logo {
             height: 28px; width: 100px;
             background-color: var(--theme-primary);
@@ -78,25 +83,29 @@ $user_foto = $data_user['foto_profil'] ?? "";
             display: inline-block; vertical-align: middle;
         }
 
-        .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); z-index: 100; padding: 20px 0; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-
+        /* 🔥 FIX 1: HEADER DISAMAKAN CSS-NYA DENGAN DASHBOARD */
+        .navbar { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); border-bottom: 2px solid #e2e8f0; padding: 15px 0; }        
+        
+        /* 🔥 FIX 2: CARD DISAMAKAN CSS-NYA DENGAN DASHBOARD */
         .card { 
-            border: 1px solid #e2e8f0; border-radius: 16px; 
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); 
-            background: #ffffff !important; 
+            border: none; border-radius: 12px; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); 
+            background: rgba(255, 255, 255, 0.95) !important; 
         }
         
         .btn-outline-success { color: var(--theme-primary) !important; border-color: var(--theme-primary) !important; }
-        .btn-outline-success:hover { background-color: var(--theme-primary) !important; color: white !important; }
+        .btn-outline-success:hover, .btn-outline-success:focus, .btn-outline-success:active { 
+            background-color: var(--theme-primary) !important; color: white !important; border-color: var(--theme-primary) !important; box-shadow: none !important; 
+        }
 
         /* =========================================================
-           KUSTOMISASI UI KALENDER DIKEMBALIKAN KE MS TEAMS (CLEAN)
+           KUSTOMISASI KALENDER MS TEAMS (BERSIH DARI BIRU WARNET)
         ========================================================= */
         #calendar { font-family: 'Inter', sans-serif; color: #334155; }
         
         .fc .fc-toolbar-title { font-weight: 700; color: #0f172a; font-size: 1.4rem; letter-spacing: -0.5px; }
         
-        /* Tombolnya balik abu-abu elegan */
+        /* Tombol Navigasi Kalender - Balik Abu-abu Elegan */
         .fc .fc-button-primary { 
             background-color: #f1f5f9 !important; 
             border: 1px solid #cbd5e1 !important; 
@@ -110,7 +119,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
         }
         .fc .fc-button-primary:hover { background-color: #e2e8f0 !important; color: #0f172a !important; }
         
-        /* Pas tombol DITEKAN / AKTIF, baru pakai warna tema lu */
+        /* Tombol Aktif Pakai Tema */
         .fc .fc-button-active { 
             background-color: var(--theme-primary) !important; 
             border-color: var(--theme-primary) !important; 
@@ -118,66 +127,54 @@ $user_foto = $data_user['foto_profil'] ?? "";
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.1) !important;
         }
         
-        /* Header Hari */
+        /* Header Hari (Sen, Sel) */
         .fc-theme-standard th { 
             background-color: #f8fafc; border-color: #e2e8f0; padding: 14px 0; 
             text-transform: uppercase; font-size: 12px; font-weight: 700;
             border-bottom: 2px solid #e2e8f0 !important;
         }
+        .fc-theme-standard td, .fc-theme-standard .fc-scrollgrid { border-color: #e2e8f0; border-radius: 12px; overflow: hidden; }
         
-        /* 💡 FIX 1: TANGGALAN BIAR GAK JADI LINK BIRU WARNET */
+        /* FIX: Ilangin link biru warnet */
         .fc-col-header-cell-cushion { 
-            color: #64748b !important; 
-            text-decoration: none !important; 
-            transition: color 0.2s;
+            color: #64748b !important; text-decoration: none !important; transition: color 0.2s;
         }
-        .fc-col-header-cell-cushion:hover { 
-            color: var(--theme-primary) !important; 
-        }
+        .fc-col-header-cell-cushion:hover { color: var(--theme-primary) !important; }
 
-        /* 💡 FIX 2: BACKGROUND HARI INI NGIKUTIN TEMA (BUKAN IJO KAKU) */
-        .fc-col-header-cell.fc-day-today { 
-            background-color: color-mix(in srgb, var(--theme-primary) 8%, white) !important; 
-        }
-        .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion { 
-            color: var(--theme-primary) !important; 
-            font-weight: 800; 
-        }
+        /* FIX: Background 'Hari Ini' ngikutin warna tema */
+        .fc-col-header-cell.fc-day-today { background-color: color-mix(in srgb, var(--theme-primary) 8%, white) !important; }
+        .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion { color: var(--theme-primary) !important; font-weight: 800; }
 
-        /* UI JAM DI SEBELAH KIRI */
-        .fc-timegrid-slot-label-cushion { 
-            font-size: 13px; font-weight: 600; color: #64748b; padding-right: 10px !important; 
-        }
-        .fc-timegrid-slot-label-cushion::after {
-            content: ' WIB'; 
-            font-size: 10px; font-weight: 500; opacity: 0.7;
-        }
+        /* Label Jam di kiri (+WIB) */
+        .fc-timegrid-slot-label-cushion { font-size: 13px; font-weight: 600; color: #64748b; padding-right: 10px !important; }
+        .fc-timegrid-slot-label-cushion::after { content: ' WIB'; font-size: 10px; font-weight: 500; opacity: 0.7; }
         
-        /* GARIS WAKTU BERGERAK */
+        /* Garis Merah Real-time */
         .fc-timegrid-now-indicator-line { border-color: #ef4444; border-width: 2px; }
         .fc-timegrid-now-indicator-arrow { border-color: #ef4444; background-color: #ef4444; border-width: 5px; }
-        
+
         /* Modifikasi Blok Event */
         .fc-timegrid-event {
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border: 1px solid rgba(0,0,0,0.05) !important;
-            cursor: pointer;
-            transition: all 0.15s ease;
+            border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05) !important; cursor: pointer; transition: all 0.15s ease;
         }
         .fc-timegrid-event:hover { transform: scale(1.02); box-shadow: 0 4px 8px rgba(0,0,0,0.15); z-index: 5 !important; }
-        
         .fc-custom-event-content { padding: 5px 8px; color: white; display: flex; flex-direction: column; overflow: hidden; }
         .fc-custom-event-title { font-size: 12px; font-weight: 700; line-height: 1.3; margin-bottom: 2px; }
         .fc-custom-event-author { font-size: 11px; opacity: 0.9; font-weight: 500; }
 
+        /* Hilangin area all-day */
         .fc-daygrid-body { display: none !important; }
-        .fc-scrollgrid { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
 
         @media (max-width: 768px) {
+            body { padding-bottom: 0 !important; }
             .page-overlay { padding-bottom: 20px; }
-            .header-title-text { font-size: 15px !important; }
-            .fc-toolbar { flex-direction: column; gap: 12px; }
+            .dynamic-logo { height: 22px; width: 85px; }
+            .header-title-text { font-size: 14px !important; }
+            .navbar .btn { font-size: 0.85rem !important; padding: 5px 12px !important; }
+            .card { padding: 15px !important; border-radius: 16px !important; }
+            .fc-toolbar { flex-direction: column; gap: 10px; }
+            .fc-toolbar-title { font-size: 1.1rem !important; }
         }
     </style>
     
@@ -188,9 +185,11 @@ $user_foto = $data_user['foto_profil'] ?? "";
     </style>
     
     <script>
+        // Terapkan Tema Warna Instan
         const currentWp = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
         const savedWp = localStorage.getItem('evision_wp_final');
         const savedColor = localStorage.getItem('evision_color_final');
+        
         if(currentWp && currentWp === savedWp && savedColor) {
             document.documentElement.style.setProperty('--theme-primary', savedColor);
         }
@@ -201,11 +200,10 @@ $user_foto = $data_user['foto_profil'] ?? "";
 
 <nav class="navbar sticky-top mb-4 shadow-sm">
     <div class="container d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center">
+        <div class="navbar-brand d-flex align-items-center text-decoration-none m-0" style="cursor: default;">
             <div class="dynamic-logo" aria-label="E-VISION"></div>
             <span class="text-secondary fw-normal ms-2 border-start ps-2 header-title-text" style="font-size: 18px;">Kalender Agenda</span>
         </div>
-        
         <a href="input.php" class="btn btn-outline-success btn-sm px-3 rounded-pill shadow-sm fw-bold">
             <i class="bi bi-arrow-left me-1"></i> Kembali
         </a>
@@ -213,70 +211,68 @@ $user_foto = $data_user['foto_profil'] ?? "";
 </nav>
 
 <div class="container flex-grow-1"> 
-    <div class="d-none d-lg-block" style="height: 60px;"></div> 
     
-    <div class="card p-4 mb-5">
-        <div id='calendar'></div>
+    <div class="col-12 d-none d-lg-block mb-4" style="height: 38px;"></div> 
+
+    <div class="col-12">
+        <div class="card p-4 mb-4">
+            <div id='calendar'></div>
+        </div>
     </div>
 </div>
 
 </div> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 <script>
+// --- LOGIKA TEMA PINTAR (ANTI KEDIP) DARI KODINGAN ASLI LU ---
 const wallpaperPath = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
-
 if (wallpaperPath) {
     const savedWp = localStorage.getItem('evision_wp_final');
     const savedColor = localStorage.getItem('evision_color_final');
 
-    if (savedWp === wallpaperPath && savedColor) {
-        document.documentElement.style.setProperty('--theme-primary', savedColor);
-    } else {
+    if (wallpaperPath !== savedWp || !savedColor) {
         const img = new Image();
+        img.src = wallpaperPath;
         img.crossOrigin = "Anonymous";
-        
         img.onload = function() {
-            try {
-                const colorThief = new ColorThief();
-                const color = colorThief.getColor(img);
-                let r = color[0], g = color[1], b = color[2];
-                let brightness = (r * 299 + g * 587 + b * 114) / 1000;
-                
-                if (brightness > 180) { r = 30; g = 41; b = 59; }
-                const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
-                
-                document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
-                localStorage.setItem('evision_wp_final', wallpaperPath);
-                localStorage.setItem('evision_color_final', dynamicRGB);
-            } catch (e) {
-                console.error("Gagal ekstrak warna dari wallpaper:", e);
-            }
+            const colorThief = new ColorThief();
+            const color = colorThief.getColor(img);
+            
+            let r = color[0], g = color[1], b = color[2];
+            let brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            
+            if (brightness > 180) { r = 30; g = 41; b = 59; }
+
+            const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
+            document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
+            
+            localStorage.setItem('evision_wp_final', wallpaperPath);
+            localStorage.setItem('evision_color_final', dynamicRGB);
         };
-        img.src = wallpaperPath; 
     }
 }
 
-// --- INISIALISASI FULLCALENDAR ---
+// --- INISIALISASI FULLCALENDAR JS ---
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
+    var isMobile = window.innerWidth < 768;
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
         timeZone: 'Asia/Jakarta', 
-        initialView: 'timeGridFiveDay', 
+        now: '<?php echo date("Y-m-d"); ?>', 
+        
+        // 💡 UBAH KE MS TEAMS STYLE
+        initialView: isMobile ? 'listMonth' : 'timeGridFiveDay', 
         locale: 'id', 
         height: 'auto',
         
         allDaySlot: false, 
         expandRows: true,
         nowIndicator: true, 
-        scrollTime: '07:00:00', 
+        scrollTime: '07:00:00',
         
-        slotLabelFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false 
-        },
-
+        slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        
         views: {
             timeGridFiveDay: {
                 type: 'timeGrid',
@@ -287,16 +283,17 @@ document.addEventListener('DOMContentLoaded', function() {
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: '' 
+            right: isMobile ? '' : 'timeGridFiveDay,listWeek'
         },
         buttonText: {
-            today: 'Hari Ini'
+            today: 'Hari Ini',
+            list: 'Daftar Agenda'
         },
-        
+
+        // CUSTOM ISI KOTAK MS TEAMS
         eventContent: function(arg) {
             let title = arg.event.title;
             let pengusul = arg.event.extendedProps.pengusul || 'Sistem';
-
             let customHtml = `
                 <div class="fc-custom-event-content">
                     <div class="fc-custom-event-title">${title}</div>
@@ -305,7 +302,10 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             return { html: customHtml };
         },
-
+        
+        // ==============================================================
+        // MENGAMBIL DATA DARI API LOKAL (KODINGAN LU TETAP AMAN)
+        // ==============================================================
         events: function(info, successCallback, failureCallback) {
             let timestamp = new Date().getTime(); 
             
@@ -315,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (hasil.status === 'success') {
                         let eventList = hasil.data.map(item => {
                             let warna = item.is_done ? '#94a3b8' : 'var(--theme-primary)';
+                            
                             return {
                                 id: item.id,
                                 title: item.title,
@@ -322,11 +323,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 end: item.end,
                                 backgroundColor: warna,
                                 borderColor: warna,
+                                textColor: '#ffffff',
                                 extendedProps: item.extendedProps
                             };
                         });
                         successCallback(eventList);
                     } else {
+                        console.error('Gagal ambil data API');
                         failureCallback();
                     }
                 })
@@ -335,7 +338,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     failureCallback();
                 });
         },
+        // ==============================================================
         
+        // Aksi pas Kotak Jadwal diklik muncul POP-UP
         eventClick: function(info) {
             let prop = info.event.extendedProps;
             Swal.fire({
