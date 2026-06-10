@@ -1,5 +1,5 @@
 <?php
-date_default_timezone_set('Asia/Jakarta'); // 1. TAMBAHAN: Paksa PHP pakai waktu Indonesia
+date_default_timezone_set('Asia/Jakarta'); // Paksa PHP pakai waktu Indonesia
 session_start();
 include 'koneksi.php';
 
@@ -16,9 +16,6 @@ $nama_user = $_SESSION['nama_lengkap'] ?? ($_SESSION['nama'] ?? 'User');
 $q_theme = pg_query($conn, "SELECT theme_wallpaper FROM users WHERE id = '$my_id'");
 $data_theme = pg_fetch_assoc($q_theme);
 $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
-
-// PERHATIKAN: Kode ambil data kalender ($query_kalender) SUDAH DIHAPUS. 
-// Kalender sekarang akan mengambil data lewat file API (api_kalender.php)
 ?>
 
 <!DOCTYPE html>
@@ -41,20 +38,6 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
 
-        /* =========================================================
-           🔥 FIX SCROLLBAR CHROME: HILANG TAPI TETAP BISA SCROLL
-        ========================================================= */
-        ::-webkit-scrollbar {
-            width: 0px;
-            background: transparent;
-            display: none;
-        }
-        html, body {
-            -ms-overflow-style: none;  /* Untuk IE dan Edge */
-            scrollbar-width: none;  /* Untuk Firefox */
-        }
-
-        /* 💡 CSS BODY & PAGE OVERLAY 100% SAMA KAYA EKSPLORASI JADWAL */
         body { 
             background-color: #f1f5f9; 
             font-family: 'Inter', sans-serif; 
@@ -68,7 +51,7 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
             left: 0;
             width: 100%;
             height: 100vh;
-            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
+            height: 100dvh; 
             z-index: -99;
             background-color: #f1f5f9;
             background-size: cover;
@@ -86,13 +69,11 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
             transition: background-color 0.5s ease; display: inline-block; vertical-align: middle;
         }
 
-        /* 🔥 HEADER IDENTIK SAMA EKSPLORASI JADWAL */
         .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); z-index: 100; padding: 20px 0; border-bottom: 2px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }        
         
-        /* 🔥 CARD IDENTIK SAMA EKSPLORASI JADWAL */
         .card { border: none; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); background: rgba(255, 255, 255, 0.95) !important; }
         
-        /* CSS TOMBOL KEMBALI DARI EKSPLORASI JADWAL */
+        /* CSS TOMBOL KEMBALI PERSIS EKSPLORASI JADWAL */
         .btn-back-custom { 
             color: var(--theme-primary); 
             border: 1px solid var(--theme-primary); 
@@ -110,7 +91,6 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         #calendar { font-family: 'Inter', sans-serif; color: #334155; }
         .fc .fc-toolbar-title { font-weight: 700; color: #1e293b; font-size: 1.3rem; }
         
-        /* Desain Button Group ala Tabs */
         .fc .fc-button-group { border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .fc .fc-button-primary { 
             background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #475569 !important;
@@ -126,20 +106,18 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         .fc-day-today { background-color: rgba(16, 185, 129, 0.05) !important; } 
 
         .fc-daygrid-day-events { max-height: 110px !important; overflow-y: auto !important; overflow-x: hidden !important; padding-right: 2px; }
-        .fc-daygrid-day-events::-webkit-scrollbar { width: 4px; display: block; } /* Pengecualian: Scrollbar dalam jadwal kalender tetep ada tapi tipis */
+        .fc-daygrid-day-events::-webkit-scrollbar { width: 4px; }
         .fc-daygrid-day-events::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .fc-daygrid-day-events::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         .fc-event { border: none; padding: 4px 6px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow-x: auto !important; display: block; margin-bottom: 3px !important; }
         .fc-event-main { color: #ffffff !important; white-space: nowrap !important; display: inline-block; min-width: 100%; }
 
-        /* Tampilan Mode Waktu (Day & Week) */
         .fc-timegrid-slot-label-cushion { font-size: 12px; font-weight: 600; color: #64748b; }
         .fc-timegrid-axis-cushion { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #94a3b8; }
         .fc-timegrid-now-indicator-line { border-color: #ef4444; border-width: 2px; }
         .fc-timegrid-now-indicator-arrow { border-color: #ef4444; border-width: 5px; background-color: #ef4444; }
 
-        /* MENGGANTI IKON KOSONG MENJADI LOGO EVISION */
         .fc-list-empty { padding: 60px 0 !important; background-color: #ffffff !important; display: flex !important; flex-direction: column; align-items: center; }
         .fc-list-empty-cushion { display: block !important; margin-top: 15px !important; font-size: 15px !important; font-weight: 500 !important; color: #64748b !important; }
         .fc-list-empty::before { content: ""; display: block; height: 55px; width: 280px; background-color: #64748b; -webkit-mask: url('logo_evision2.png') no-repeat center; mask: url('logo_evision2.png') no-repeat center; -webkit-mask-size: contain; mask-size: contain; opacity: 0.85; }
@@ -161,6 +139,16 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         body::before { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }
         <?php endif; ?>
     </style>
+    
+    <script>
+        // 🔥 FIX TEMA 1: Pastikan variabel gak bentrok dan langsung ganti warna
+        const wpSaatIni = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
+        const wpTersimpan = localStorage.getItem('evision_wp_final');
+        const warnaTersimpan = localStorage.getItem('evision_color_final');
+        if(wpSaatIni && wpSaatIni === wpTersimpan && warnaTersimpan) { 
+            document.documentElement.style.setProperty('--theme-primary', warnaTersimpan); 
+        }
+    </script>    
 </head>
 <body id="bodyKalender">
 <div class="page-overlay"> 
@@ -179,9 +167,9 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 
 <div class="container flex-grow-1"> 
     
-    <div class="d-none d-lg-block mb-4" style="height: 60px;"></div>
+    <div class="d-none d-lg-block mb-4" style="height: 20px;"></div>
 
-    <div class="card p-4">
+    <div class="card p-4 mb-4">
         <div id='calendar'></div>
     </div>
 </div>
@@ -189,24 +177,31 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 </div> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 <script>
-// --- LOGIKA TEMA PINTAR (ANTI KEDIP) ---
-const wallpaperPath = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
-if (wallpaperPath) {
+// --- 🔥 FIX TEMA 2: LOGIKA TEMA PINTAR DIPERKUAT BIAR GAK JADI IJO ---
+const wallpaperUser = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
+if (wallpaperUser) {
     const savedWp = localStorage.getItem('evision_wp_final');
     const savedColor = localStorage.getItem('evision_color_final');
-    if (wallpaperPath !== savedWp || !savedColor) {
-        const img = new Image(); img.src = wallpaperPath; img.crossOrigin = "Anonymous";
+
+    if (wallpaperUser !== savedWp || !savedColor) {
+        const img = new Image(); img.src = wallpaperUser; img.crossOrigin = "Anonymous";
         img.onload = function() {
-            const colorThief = new ColorThief(); const color = colorThief.getColor(img);
-            let r = color[0], g = color[1], b = color[2];
-            let brightness = (r * 299 + g * 587 + b * 114) / 1000;
-            if (brightness > 180) { r = 30; g = 41; b = 59; }
-            const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
-            document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
-            localStorage.setItem('evision_wp_final', wallpaperPath);
-            localStorage.setItem('evision_color_final', dynamicRGB);
+            try {
+                const colorThief = new ColorThief(); const color = colorThief.getColor(img);
+                let r = color[0], g = color[1], b = color[2];
+                let brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                if (brightness > 180) { r = 30; g = 41; b = 59; }
+                const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
+                
+                document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
+                localStorage.setItem('evision_wp_final', wallpaperUser);
+                localStorage.setItem('evision_color_final', dynamicRGB);
+            } catch(e) { console.error("Gagal ambil warna", e); }
         };
-    } 
+    } else {
+        // PAKSA PAKAI WARNA TERSIMPAN KALAU GAK GANTI WALLPAPER!
+        document.documentElement.style.setProperty('--theme-primary', savedColor);
+    }
 }
 
 // --- INISIALISASI FULLCALENDAR JS (MS TEAMS VIEW) ---
@@ -261,8 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // ==============================================================
         events: function(info, successCallback, failureCallback) {
             let timestamp = new Date().getTime(); 
-            // 💡 KUNCI FILTER: Kirim nama lu ke API lewat URL parameter "user="
-            let userName = "<?php echo urlencode($nama_user); ?>";
+            let userName = "<?php echo urlencode($nama_user); ?>"; // Buat Filter API
             
             fetch(`api_kalender.php?nocache=${timestamp}&user=${userName}`, { cache: 'no-store' }) 
                 .then(response => response.json())
