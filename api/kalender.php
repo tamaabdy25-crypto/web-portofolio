@@ -104,7 +104,7 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         #calendar { font-family: 'Inter', sans-serif; color: #334155; }
         .fc .fc-toolbar-title { font-weight: 700; color: #1e293b; font-size: 1.3rem; }
         
-        /* 🔥 FIX FONT BIRU: Paksa semua teks hari/link ngikut warna tema */
+        /* FIX FONT BIRU */
         .fc a {
             color: var(--theme-primary) !important;
             text-decoration: none !important;
@@ -125,55 +125,65 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         .fc-theme-standard th { background-color: #f8fafc; border-color: #e2e8f0; padding: 12px 0; color: #475569; text-transform: uppercase; font-size: 13px; font-weight: 700; }
         .fc-theme-standard td, .fc-theme-standard .fc-scrollgrid { border-color: #e2e8f0; border-radius: 8px; overflow: hidden;}
         
-        /* 🔥 FIX KOTAK GEPENG & KOSONG: Kita paksa layout flex di dalam container grid-nya */
-        .fc-timegrid-event { 
-            min-height: 50px !important; 
-            border-radius: 6px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border: 1px solid rgba(0,0,0,0.05) !important; 
-            cursor: pointer; 
-            transition: all 0.15s ease;
-        }
-        .fc-timegrid-event:hover { transform: scale(1.01); z-index: 5 !important; }
-        
-        /* Lapisan terdalam bawaan FullCalendar harus dibikin flex tinggi penuh biar text custom-nya keliatan */
-        .fc-timegrid-event .fc-event-main {
+        /* =========================================================
+           🔥 ULTIMATE FIX: BONGKAR LAYOUT BOX JADWAL BIAR TERLIHAT 🔥
+        ========================================================= */
+        .fc-timegrid-event, .fc-v-event { 
+            min-height: 52px !important; /* Paksa tinggi box min 52px biar muat 2 baris */
+            border-radius: 6px !important; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+            border: none !important;
             padding: 0 !important;
+            overflow: visible !important; /* Biar isinya gak dicekik system */
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .fc-timegrid-event:hover { transform: scale(1.02); z-index: 99 !important; }
+        
+        /* Paksa wrapper terdalam FullCalendar bertekstur Flex penuh */
+        .fc-timegrid-event .fc-event-main, .fc-v-event .fc-event-main {
+            padding: 4px 6px !important;
             display: flex !important;
             flex-direction: column !important;
+            justify-content: center !important;
             height: 100% !important;
             width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
         }
 
-        /* Desain teks kustom pembawa acara dan pengusul */
-        .fc-custom-event-content { 
-            padding: 5px 8px; 
-            color: white !important; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            height: 100%; 
-            width: 100%;
-            overflow: hidden; 
+        /* Desain Struktur Custom Content Teks Lu */
+        .fc-custom-box {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            height: 100% !important;
+            color: #ffffff !important;
         }
-        .fc-custom-event-title { 
-            font-size: 11px; 
-            font-weight: 700; 
-            line-height: 1.3; 
-            white-space: normal !important; 
-            display: -webkit-box; 
-            -webkit-line-clamp: 2; 
-            -webkit-box-orient: vertical; 
-            overflow: hidden; 
+        .fc-custom-title { 
+            font-size: 11px !important; 
+            font-weight: 700 !important; 
+            line-height: 1.2 !important;
+            color: #ffffff !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden !important;
         }
-        .fc-custom-event-author { 
-            font-size: 10px; 
-            opacity: 0.9; 
-            font-weight: 500; 
-            margin-top: 2px; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
+        .fc-custom-author { 
+            font-size: 10px !important; 
+            opacity: 0.95 !important; 
+            font-weight: 500 !important; 
+            margin-top: 2px !important;
+            color: #ffffff !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 3px;
         }
 
         .fc-daygrid-day-number { color: #334155; font-weight: 600; font-size: 14px; text-decoration: none !important; padding: 8px; }
@@ -266,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
         timeZone: 'Asia/Jakarta', 
         now: '<?php echo date("Y-m-d"); ?>', 
         
-        // 🔒 KUNCI: Pakai View Asli Senin - Jumat
+        // KUNCI: View Asli Senin - Jumat
         initialView: isMobile ? 'listMonth' : 'timeGridWorkWeek', 
         locale: 'id', 
         height: 'auto',
@@ -277,8 +287,8 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollTime: '07:00:00',
         slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
         
-        // 🔒 KUNCI: Tinggi minimal box jadwal biar gak mengkerut
-        eventMinHeight: 50, 
+        // KUNCI: Tinggi minimal box jadwal biar ga gepeng
+        eventMinHeight: 52, 
 
         headerToolbar: {
             left: 'prev,next today',
@@ -294,18 +304,21 @@ document.addEventListener('DOMContentLoaded', function() {
             list: 'Daftar Agenda'
         },
         
-        // 🛠️ FIX TOTAL DI SINI: Render teks kustom agar muncul sempurna di view timeGrid
+        // 🔥 FIX MUTLAK DI SINI: Gunakan objek kustom murni agar kompatibel dengan layout grid bawaan!
         eventContent: function(arg) {
             let title = arg.event.title;
             let pengusul = arg.event.extendedProps.pengusul || 'Sistem';
-            return { 
-                html: `
-                    <div class="fc-custom-event-content">
-                        <div class="fc-custom-event-title">${title}</div>
-                        <div class="fc-custom-event-author"><i class="bi bi-person-fill"></i> ${pengusul}</div>
-                    </div>
-                ` 
-            };
+            
+            // Buat element DOM murni biar gak di-ignore/di-skip sama view bawaan FC
+            let container = document.createElement('div');
+            container.className = 'fc-custom-box';
+            
+            container.innerHTML = `
+                <div class="fc-custom-title">${title}</div>
+                <div class="fc-custom-author"><i class="bi bi-person-fill"></i> ${pengusul}</div>
+            `;
+            
+            return { domNodes: [container] };
         },
 
         events: function(info, successCallback, failureCallback) {
