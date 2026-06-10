@@ -38,11 +38,22 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
 
-        body { 
+        /* =========================================================
+           🔥 OBAT ANTI SCROLLBAR RUSUH CHROME 🔥
+        ========================================================= */
+        html::-webkit-scrollbar, body::-webkit-scrollbar {
+            width: 0px !important;
+            background: transparent !important;
+            display: none !important;
+        }
+        html, body {
+            scrollbar-width: none !important; /* Buat Firefox */
+            -ms-overflow-style: none !important; /* Buat Edge/IE */
             background-color: #f1f5f9; 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
         }
+        /* ========================================================= */
         
         body::before {
             content: "";
@@ -73,7 +84,6 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         
         .card { border: none; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); background: rgba(255, 255, 255, 0.95) !important; }
         
-        /* CSS TOMBOL KEMBALI PERSIS EKSPLORASI JADWAL */
         .btn-back-custom { 
             color: var(--theme-primary); 
             border: 1px solid var(--theme-primary); 
@@ -106,7 +116,9 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         .fc-day-today { background-color: rgba(16, 185, 129, 0.05) !important; } 
 
         .fc-daygrid-day-events { max-height: 110px !important; overflow-y: auto !important; overflow-x: hidden !important; padding-right: 2px; }
-        .fc-daygrid-day-events::-webkit-scrollbar { width: 4px; }
+        
+        /* Scrollbar KHUSUS kotak event didalam kalender (Biar gak ilang) */
+        .fc-daygrid-day-events::-webkit-scrollbar { width: 4px; display: block !important; }
         .fc-daygrid-day-events::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .fc-daygrid-day-events::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
@@ -139,16 +151,6 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
         body::before { background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important; }
         <?php endif; ?>
     </style>
-    
-    <script>
-        // 🔥 FIX TEMA 1: Pastikan variabel gak bentrok dan langsung ganti warna
-        const wpSaatIni = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
-        const wpTersimpan = localStorage.getItem('evision_wp_final');
-        const warnaTersimpan = localStorage.getItem('evision_color_final');
-        if(wpSaatIni && wpSaatIni === wpTersimpan && warnaTersimpan) { 
-            document.documentElement.style.setProperty('--theme-primary', warnaTersimpan); 
-        }
-    </script>    
 </head>
 <body id="bodyKalender">
 <div class="page-overlay"> 
@@ -167,7 +169,7 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 
 <div class="container flex-grow-1"> 
     
-    <div class="d-none d-lg-block mb-4" style="height: 20px;"></div>
+    <div class="d-none d-lg-block mb-4" style="height: 60px;"></div>
 
     <div class="card p-4 mb-4">
         <div id='calendar'></div>
@@ -177,34 +179,29 @@ $user_wallpaper = $data_theme['theme_wallpaper'] ?? "";
 </div> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 <script>
-// --- 🔥 FIX TEMA 2: LOGIKA TEMA PINTAR DIPERKUAT BIAR GAK JADI IJO ---
-const wallpaperUser = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
-if (wallpaperUser) {
-    const savedWp = localStorage.getItem('evision_wp_final');
-    const savedColor = localStorage.getItem('evision_color_final');
+// --- LOGIKA TEMA PINTAR (ANTI KEDIP) ---
+const wallpaperPath = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
+const savedColor = localStorage.getItem('evision_color_final');
+if (savedColor) document.documentElement.style.setProperty('--theme-primary', savedColor);
 
-    if (wallpaperUser !== savedWp || !savedColor) {
-        const img = new Image(); img.src = wallpaperUser; img.crossOrigin = "Anonymous";
+if (wallpaperPath) {
+    const savedWp = localStorage.getItem('evision_wp_final');
+    if (wallpaperPath !== savedWp || !savedColor) {
+        const img = new Image(); img.src = wallpaperPath; img.crossOrigin = "Anonymous";
         img.onload = function() {
-            try {
-                const colorThief = new ColorThief(); const color = colorThief.getColor(img);
-                let r = color[0], g = color[1], b = color[2];
-                let brightness = (r * 299 + g * 587 + b * 114) / 1000;
-                if (brightness > 180) { r = 30; g = 41; b = 59; }
-                const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
-                
-                document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
-                localStorage.setItem('evision_wp_final', wallpaperUser);
-                localStorage.setItem('evision_color_final', dynamicRGB);
-            } catch(e) { console.error("Gagal ambil warna", e); }
+            const colorThief = new ColorThief(); const color = colorThief.getColor(img);
+            let r = color[0], g = color[1], b = color[2];
+            let brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            if (brightness > 180) { r = 30; g = 41; b = 59; }
+            const dynamicRGB = `rgb(${r}, ${g}, ${b})`;
+            document.documentElement.style.setProperty('--theme-primary', dynamicRGB);
+            localStorage.setItem('evision_wp_final', wallpaperPath);
+            localStorage.setItem('evision_color_final', dynamicRGB);
         };
-    } else {
-        // PAKSA PAKAI WARNA TERSIMPAN KALAU GAK GANTI WALLPAPER!
-        document.documentElement.style.setProperty('--theme-primary', savedColor);
-    }
+    } 
 }
 
-// --- INISIALISASI FULLCALENDAR JS (MS TEAMS VIEW) ---
+// --- INISIALISASI FULLCALENDAR JS ---
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var isMobile = window.innerWidth < 768;
@@ -251,12 +248,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return { html: `<div class="fc-custom-event-content"><div class="fc-custom-event-title">${title}</div><div class="fc-custom-event-author"><i class="bi bi-person-fill"></i> ${pengusul}</div></div>` };
         },
 
-        // ==============================================================
-        // MENGAMBIL DATA DARI API LOKAL + KIRIM NAMA USER BUAT FILTER
-        // ==============================================================
         events: function(info, successCallback, failureCallback) {
             let timestamp = new Date().getTime(); 
-            let userName = "<?php echo urlencode($nama_user); ?>"; // Buat Filter API
+            let userName = "<?php echo urlencode($nama_user); ?>";
             
             fetch(`api_kalender.php?nocache=${timestamp}&user=${userName}`, { cache: 'no-store' }) 
                 .then(response => response.json())
