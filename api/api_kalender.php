@@ -22,8 +22,19 @@ if (!$conn) {
     exit;
 }
 
-// 3. AMBIL DATA DARI POSTGRESQL (Supabase)
-$query_kalender = pg_query($conn, "SELECT * FROM meetings ORDER BY meeting_date ASC, start_time ASC");
+// ==============================================================
+// 3. 🔥 FIX TOTAL: TANGKAP NAMA USER & SARING DATABASE SUPABASE 🔥
+// ==============================================================
+$user_login = $_GET['user'] ?? '';
+$user_login = pg_escape_string($conn, $user_login); // Pengaman anti SQL Injection
+
+if (!empty($user_login)) {
+    // KUNCI SAKTI: Hanya ambil jadwal jika nama lu adalah Pengusul ATAU nama lu ada di kolom peserta!
+    $query_kalender = pg_query($conn, "SELECT * FROM meetings WHERE nama_pengusul = '$user_login' OR peserta LIKE '%$user_login%' ORDER BY meeting_date ASC, start_time ASC");
+} else {
+    // Proteksi Keamanan: Kalau parameter nama kosong/hancur, kunci data biar gak bocor!
+    $query_kalender = pg_query($conn, "SELECT * FROM meetings WHERE 1=0");
+}
 
 // 🔥 FIX 3: Tangkap error tanpa bikin PHP crash
 if (!$query_kalender) {
