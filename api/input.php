@@ -72,20 +72,8 @@ $user_foto = $data_user['foto_profil'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
         
-        /* 🔥 FIX SCROLLBAR RUSUH CHROME */
-        html::-webkit-scrollbar, body::-webkit-scrollbar {
-            width: 0px !important;
-            height: 0px !important;
-            background: transparent !important;
-            display: none !important;
-        }
-        html, body {
-            scrollbar-width: none !important;
-            -ms-overflow-style: none !important;
-        }
-
-        /* 💡 TEMA DEFAULT LUXURY MESH GRADIENT (DIPISAH AMAN BIAR GAK TABRAKAN) */
-        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; color: #334155; margin: 0; }
+        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #334155; margin: 0; }
         body::before {
             content: "";
             position: fixed;
@@ -95,41 +83,17 @@ $user_foto = $data_user['foto_profil'] ?? "";
             height: 100vh;
             height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
             z-index: -99;
-            background-color: #f8fafc;
-            background-image: 
-                radial-gradient(at 0% 0%, color-mix(in srgb, var(--theme-primary) 7%, transparent) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.05) 0px, transparent 50%),
-                radial-gradient(at 50% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 50%);
+            background-color: #f8f9fa;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             transition: background 0.5s ease;
         }
 
-        .page-overlay { background: rgba(255, 255, 255, 0.15); min-height: 100vh; display: flex; flex-direction: column; width: 100%; }
-        
-        /* 🔥 UPGRADE NAVBAR GLASSMORPHISM */
-        .navbar { 
-            background-color: rgba(255, 255, 255, 0.8) !important; 
-            backdrop-filter: blur(12px) !important; 
-            -webkit-backdrop-filter: blur(12px) !important; 
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important; 
-            padding: 15px 0; 
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.01) !important;
-        }        
-        
+        .page-overlay { background: rgba(255, 255, 255, 0.2); min-height: 100vh; display: flex; flex-direction: column; width: 100%; }
+        .navbar { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); border-bottom: 2px solid #e2e8f0; padding: 15px 0; }        
         .dynamic-logo { height: 28px; width: 100px; background-color: var(--theme-primary); -webkit-mask: url('logo_evision1.png') no-repeat left center; -webkit-mask-size: contain; mask: url('logo_evision1.png') no-repeat left center; mask-size: contain; transition: background-color 0.5s ease; }
-        
-        /* 🔥 UPGRADE CARD MODERN RESILIENT */
-        .card { 
-            border: 1px solid rgba(255, 255, 255, 0.7) !important; 
-            border-radius: 16px !important; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.02), 0 10px 10px -5px rgba(0, 0, 0, 0.01) !important; 
-            background: rgba(255, 255, 255, 0.85) !important; 
-            backdrop-filter: blur(10px) !important;
-            -webkit-backdrop-filter: blur(10px) !important;
-        }
-        
+        .card { border: none; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); background: rgba(255, 255, 255, 0.95) !important; }
         .table td, .table th { color: #000000 !important; white-space: nowrap; }
         .btn-primary, .btn-info, .status-badge.bg-berlangsung { background-color: var(--theme-primary) !important; border: none !important; color: white !important; }
         .text-success { color: var(--theme-primary) !important; }
@@ -138,25 +102,8 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .shake-modal { animation: shake 0.3s ease-in-out 0s 2; border: 2px solid #ef4444 !important; }
         .error-text { color: #ef4444; font-size: 11px; font-weight: 700; margin-top: 5px; display: block; }
         #preview-theme { width: 100%; max-height: 150px; object-fit: cover; border-radius: 10px; display: none; margin-bottom: 15px; border: 2px solid var(--theme-primary); }
-        
-        /* 🔥 UPGRADE BUTTON MODERN */
-        .btn-arsip-kustom { 
-            background-color: rgba(255, 255, 255, 0.9) !important; 
-            color: var(--theme-primary) !important; 
-            border: 1px solid rgba(16, 185, 129, 0.3) !important; 
-            font-weight: 700; 
-            border-radius: 12px; 
-            padding: 10px 18px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02) !important;
-            transition: all 0.25s ease; 
-        }
-        .btn-arsip-kustom:hover { 
-            background-color: var(--theme-primary) !important; 
-            color: white !important; 
-            border-color: var(--theme-primary) !important;
-            transform: translateY(-1px);
-            box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--theme-primary) 20%, transparent) !important;
-        }
+        .btn-arsip-kustom { background-color: #ffffff !important; color: var(--theme-primary) !important; border: 2px solid var(--theme-primary) !important; font-weight: 700; border-radius: 10px; transition: all 0.2s; }
+        .btn-arsip-kustom:hover { background-color: var(--theme-primary) !important; color: white !important; }
         .btn-arsip-kustom:hover i { color: white !important; }
         
         /* CSS SELECT2 PREMIUM */
@@ -188,9 +135,9 @@ $user_foto = $data_user['foto_profil'] ?? "";
         @media (max-width: 768px) { .header-title-text { font-size: 14px !important; } }
 
         @keyframes shakeError {
-            0%, 100__ { transform: translateX(0); }
-            20%, 60__ { transform: translateX(-5px); }
-            40%, 80__ { transform: translateX(5px); }
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
         }
         .shake-animation {
             animation: shakeError 0.4s ease-in-out;
@@ -822,28 +769,33 @@ $(document).ready(function() {
     });
 });
 
-// --- SATPAM FRONTEND BUAT UPLOAD TEMA (7MB) ---
+    // --- SATPAM FRONTEND BUAT UPLOAD TEMA (7MB) ---
 const formTema = document.getElementById('formTema'); 
 const inputWallpaper = document.getElementById('input-wallpaper'); 
 
 if (formTema && inputWallpaper) {
+    // 1. Kita tangkep tombol submitnya biar bisa kita kendaliin
     const btnSubmitTema = formTema.querySelector('button[type="submit"]');
+    // 2. Simpan teks aslinya biar bisa dibalikin (misal: "Simpan" atau "Terapkan")
     const teksAsliBtn = btnSubmitTema ? btnSubmitTema.innerHTML : 'Terapkan';
 
     formTema.addEventListener('submit', function(e) {
         const file = inputWallpaper.files[0];
 
         if (file) {
-            if (file.size > 7340032) { 
+            if (file.size > 7340032) { // 7MB = 7340032 bytes
+                // STOP SEMUANYA TERMASUK ANIMASI LOADING LAIN!
                 e.preventDefault(); 
                 e.stopImmediatePropagation(); 
                 
+                // Balikin tombol kayak semula, cabut efek loading-nya!
                 if (btnSubmitTema) {
                     btnSubmitTema.innerHTML = teksAsliBtn;
                     btnSubmitTema.disabled = false;
                     btnSubmitTema.classList.remove('disabled');
                 }
 
+                // Munculin pesan error kotak merah
                 let errorMsg = document.getElementById('error-tema-size');
                 if (!errorMsg) {
                     errorMsg = document.createElement('div');
@@ -857,6 +809,7 @@ if (formTema && inputWallpaper) {
                 
                 errorMsg.style.display = 'block'; 
                 
+                // Efek getar
                 inputWallpaper.classList.remove('shake-animation');
                 void inputWallpaper.offsetWidth; 
                 inputWallpaper.classList.add('shake-animation');
@@ -864,11 +817,13 @@ if (formTema && inputWallpaper) {
         }
     });
 
+    // Kalau user sadar dan ganti foto lain
     inputWallpaper.addEventListener('change', function() {
         const errorMsg = document.getElementById('error-tema-size');
         if (errorMsg) errorMsg.style.display = 'none';
         this.classList.remove('shake-animation'); 
         
+        // Pastiin tombol bisa diklik normal lagi
         if (btnSubmitTema) {
             btnSubmitTema.innerHTML = teksAsliBtn;
             btnSubmitTema.disabled = false;
