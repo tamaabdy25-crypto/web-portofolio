@@ -148,7 +148,7 @@ const wallpaperPath = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
 const savedColor = localStorage.getItem('evision_color_final');
 if (savedColor) document.documentElement.style.setProperty('--theme-primary', savedColor);
 
-// --- INISIALISASI FULLCALENDAR JS (MS TEAMS VIEW) ---
+// --- INISIALISASI FULLCALENDAR JS ---
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var isMobile = window.innerWidth < 768;
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
         timeZone: 'Asia/Jakarta', 
         now: '<?php echo date("Y-m-d"); ?>', 
         
-        // 🔥 FIX VIEW MS TEAMS: Definisikan Work Week (5 Hari)
+        // 💡 TAMBAHAN GW: Bikin view MS Teams
         views: {
             timeGridWorkWeek: {
                 type: 'timeGrid',
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
 
-        // Tampilan default awal dibuka
+        // 💡 TAMBAHAN GW: Default view diubah jadi Work Week
         initialView: isMobile ? 'listMonth' : 'timeGridWorkWeek', 
         locale: 'id', 
         height: 'auto',
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollTime: '07:00:00',
         slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
         
-        // 🔥 FIX HEADER MENU MS TEAMS: Day, Work week, Week, Month
+        // 💡 TAMBAHAN GW: Header Toolbar diubah biar ada Day, Work Week, Week, Month
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -199,11 +199,11 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         // ==============================================================
-        // MENGAMBIL DATA DARI API LOKAL + KIRIM NAMA USER BUAT FILTER
+        // MENGAMBIL DATA DARI API LOKAL 
         // ==============================================================
         events: function(info, successCallback, failureCallback) {
             let timestamp = new Date().getTime(); 
-            // 💡 KUNCI FILTER: Kirim nama lu ke API lewat URL parameter "user="
+            // 💡 TAMBAHAN GW: Kirim nama user buat di filter di API
             let userName = "<?php echo urlencode($nama_user); ?>";
             
             fetch(`api_kalender.php?nocache=${timestamp}&user=${userName}`, { cache: 'no-store' }) 
