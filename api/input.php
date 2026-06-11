@@ -220,7 +220,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
               <img id="preview-theme" src="#" alt="Pratinjau Gambar">
              <p class="small text-muted mb-3">
     <i class="bi bi-info-circle me-1"></i>Pilih foto HD untuk wallpaper. Jika terang, logo & ikon otomatis menjadi gelap.
-    <strong class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Maksimal ukuran file: 4,5MB</strong>
+    <strong class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Maksimal ukuran file: 4.5MB</strong>
 </p>
               <input type="file" name="wallpaper" id="input-wallpaper" class="form-control mb-2" accept="image/*">
           </div>
@@ -769,7 +769,7 @@ $(document).ready(function() {
     });
 });
 
-    // --- SATPAM FRONTEND BUAT UPLOAD TEMA (4,5MB) ---
+    // --- SATPAM FRONTEND BUAT UPLOAD TEMA (4.5MB) ---
 const formTema = document.getElementById('formTema'); 
 const inputWallpaper = document.getElementById('input-wallpaper'); 
 
@@ -783,7 +783,7 @@ if (formTema && inputWallpaper) {
         const file = inputWallpaper.files[0];
 
         if (file) {
-            if (file.size > 4718592) { // 4,5MB = 4718592 bytes
+            if (file.size > 4718592) { // 4.5MB = 4718592 bytes
                 // STOP SEMUANYA TERMASUK ANIMASI LOADING LAIN!
                 e.preventDefault(); 
                 e.stopImmediatePropagation(); 
@@ -803,7 +803,7 @@ if (formTema && inputWallpaper) {
                     errorMsg.className = 'text-error-shake fw-bold text-start mb-2';
                     errorMsg.style.color = '#ef4444';
                     errorMsg.style.fontSize = '13px';
-                    errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Gagal: Ukuran wallpaper maksimal 4,5MB!';
+                    errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Gagal: Ukuran wallpaper maksimal 4.5MB!';
                     inputWallpaper.parentNode.insertBefore(errorMsg, inputWallpaper.nextSibling);
                 }
                 
