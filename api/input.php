@@ -55,7 +55,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scalable=no, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -72,7 +72,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
         
-        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
         body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #334155; margin: 0; }
         body::before {
             content: "";
@@ -81,7 +80,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
             left: 0;
             width: 100%;
             height: 100vh;
-            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
+            height: 100dvh; 
             z-index: -99;
             background-color: #f8f9fa;
             background-size: cover;
@@ -106,7 +105,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .btn-arsip-kustom:hover { background-color: var(--theme-primary) !important; color: white !important; }
         .btn-arsip-kustom:hover i { color: white !important; }
         
-        /* CSS SELECT2 PREMIUM */
         .select2-container--default .select2-selection--multiple { background-color: #f8fafc; border: 1px solid #dee2e6; border-radius: 10px; min-height: 44px; padding: 4px 8px; }
         .select2-container--default.select2-container--focus .select2-selection--multiple { border-color: var(--theme-primary); box-shadow: none !important; }
         .select2-container--default .select2-selection--multiple .select2-search.select2-search--inline .select2-search__field { height: 30px !important; line-height: 28px !important; margin-top: 2px !important; font-family: 'Inter', sans-serif; padding-bottom: 0 !important; }
@@ -120,7 +118,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: var(--theme-primary); border-right: none; margin-right: 6px; font-weight: bold; }
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover { background: transparent; color: #ef4444; }
 
-        /* PERBAIKAN WARNA TOMBOL MODAL & SWEETALERT */
         .modal-content .btn-success { background-color: var(--theme-primary) !important; border-color: var(--theme-primary) !important; color: #ffffff !important; transition: all 0.3s ease !important; }
         .modal-content .btn-success:hover { opacity: 0.85 !important; transform: translateY(-1px) !important; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; }
         .swal2-styled.swal2-confirm { background-color: var(--theme-primary) !important; border-color: var(--theme-primary) !important; color: #ffffff !important; border-radius: 8px !important; font-weight: bold !important; transition: all 0.3s ease !important; }
@@ -128,7 +125,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
 
         @media (max-width: 992px) { body { padding-bottom: 0 !important; } .page-overlay { padding-bottom: 20px; } .navbar .container { flex-wrap: nowrap; } .dynamic-logo { height: 22px; width: 85px; } .dropdown-menu-end { position: absolute !important; right: 0; left: auto; } .action-buttons-container { display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px !important; margin-bottom: 20px !important; } .action-buttons-container .btn { width: 100%; font-size: 13px !important; padding: 10px !important; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; margin: 0 !important; } .action-buttons-container .btn i { margin-right: 6px !important; font-size: 15px; } .card { padding: 20px 15px !important; border-radius: 16px !important; min-height: calc(100vh - 260px); display: flex; flex-direction: column; margin-bottom: 10px !important; } .card h5 { font-size: 1.15rem; margin-bottom: 20px !important; } #area-tabel-otomatis { flex-grow: 1; overflow-x: auto; -webkit-overflow-scrolling: touch; } .modal-body label { font-size: 12px; } .modal-title { font-size: 1.1rem; } }
         
-        /* HILANGIN BLOK BIRU PAS MENU DROPDOWN DI-KLIK */
         .dropdown-menu .dropdown-item:active, .dropdown-menu .dropdown-item:focus { background-color: #f8f9fa !important; color: inherit !important; }
         .dropdown-menu .dropdown-item:hover { background-color: #f1f5f9 !important; color: inherit !important; }
         .dropdown-menu .dropdown-item.text-danger:hover, .dropdown-menu .dropdown-item.text-danger:focus, .dropdown-menu .dropdown-item.text-danger:active { color: #ef4444 !important; background-color: #fee2e2 !important; }
@@ -220,7 +216,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
               <img id="preview-theme" src="#" alt="Pratinjau Gambar">
              <p class="small text-muted mb-3">
     <i class="bi bi-info-circle me-1"></i>Pilih foto HD untuk wallpaper. Jika terang, logo & ikon otomatis menjadi gelap.
-    <strong class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Maksimal ukuran file: 4.5MB</strong>
+    <strong class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Maksimal ukuran file: 4.2MB (Batas Aman Vercel)</strong>
 </p>
               <input type="file" name="wallpaper" id="input-wallpaper" class="form-control mb-2" accept="image/*">
           </div>
@@ -394,6 +390,12 @@ if (wallpaperPath) {
 
 document.getElementById('input-wallpaper').addEventListener('change', function(){
     const file = this.files[0];
+    
+    // Hapus getaran dan tulisan error tiap ganti file baru
+    const errorMsg = document.getElementById('error-tema-size');
+    if (errorMsg) errorMsg.style.display = 'none';
+    this.classList.remove('shake-animation'); 
+
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e){
@@ -408,10 +410,11 @@ document.getElementById('input-wallpaper').addEventListener('change', function()
 function simpanTema(event) {
     event.preventDefault();
     
-    // 🔥 SUNTIKAN SAKLI ANTI-RACE CONDITION: Hadang fetch dari awal jika file kegedean!
+    // 🔥 SATPAM PENJAGA GERBANG UTAMA DIUBAH MENJADI KAPASITAS 4.2MB 🔥
     let inputWpCheck = document.getElementById('input-wallpaper');
-    if (inputWpCheck && inputWpCheck.files[0] && inputWpCheck.files[0].size > 4718592) {
-        return false; // ⛔ STOP INSTAN DI SINI! Jangan ijinkan fetch berjalan di latar belakang!
+    // 💡 4.2MB = 4.2 * 1024 * 1024 = 4404019 Bytes
+    if (inputWpCheck && inputWpCheck.files[0] && inputWpCheck.files[0].size > 4404019) {
+        return false; // ⛔ BLOKIR MUTLAK DI SINI! Jangan biarkan request kosong terkirim!
     }
 
     let form = document.getElementById('formTema');
@@ -607,7 +610,7 @@ function simpanData(event, tipeAksi) {
             Swal.fire({ icon: 'success', title: data.pesan, showConfirmButton: false, timer: 1500 });
             loadTabelUser(); 
         } else {
-            let contentDiv = document.getElementById(idContent);
+            let contentDiv = document.getElementById(contentDiv);
             contentDiv.classList.add('shake-modal');
             setTimeout(() => contentDiv.classList.remove('shake-modal'), 1000);
             
@@ -776,7 +779,7 @@ $(document).ready(function() {
     });
 });
 
-// --- SATPAM FRONTEND BUAT UPLOAD TEMA (4.5MB) ---
+// --- SATPAM FRONTEND INTERAKTIF (4.2MB SAKLEK) ---
 const formTema = document.getElementById('formTema'); 
 const inputWallpaper = document.getElementById('input-wallpaper'); 
 
@@ -788,19 +791,18 @@ if (formTema && inputWallpaper) {
         const file = inputWallpaper.files[0];
 
         if (file) {
-            if (file.size > 4718592) { // 4.5MB = 4718592 bytes
-                // STOP SEMUANYA TERMASUK ANIMASI LOADING LAIN!
+            // 🔥 Amankan batas ketat Vercel: 4.2MB = 4404019 Bytes
+            if (file.size > 4404019) { 
+                // HALANGI EKSEKUSI FORM SECARA TOTAL
                 e.preventDefault(); 
                 e.stopImmediatePropagation(); 
                 
-                // Balikin tombol kayak semula, cabut efek loading-nya!
                 if (btnSubmitTema) {
                     btnSubmitTema.innerHTML = teksAsliBtn;
                     btnSubmitTema.disabled = false;
                     btnSubmitTema.classList.remove('disabled');
                 }
 
-                // Munculin pesan error kotak merah
                 let errorMsg = document.getElementById('error-tema-size');
                 if (!errorMsg) {
                     errorMsg = document.createElement('div');
@@ -808,13 +810,12 @@ if (formTema && inputWallpaper) {
                     errorMsg.className = 'text-error-shake fw-bold text-start mb-2';
                     errorMsg.style.color = '#ef4444';
                     errorMsg.style.fontSize = '13px';
-                    errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Gagal: Ukuran wallpaper maksimal 4.5MB!';
+                    errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Gagal: Ukuran wallpaper maksimal 4.2MB!';
                     inputWallpaper.parentNode.insertBefore(errorMsg, inputWallpaper.nextSibling);
                 }
                 
                 errorMsg.style.display = 'block'; 
                 
-                // Efek getar
                 inputWallpaper.classList.remove('shake-animation');
                 void inputWallpaper.offsetWidth; 
                 inputWallpaper.classList.add('shake-animation');
@@ -822,13 +823,11 @@ if (formTema && inputWallpaper) {
         }
     });
 
-    // Kalau user sadar dan ganti foto lain
     inputWallpaper.addEventListener('change', function() {
         const errorMsg = document.getElementById('error-tema-size');
         if (errorMsg) errorMsg.style.display = 'none';
         this.classList.remove('shake-animation'); 
         
-        // Pastiin tombol bisa diklik normal lagi
         if (btnSubmitTema) {
             btnSubmitTema.innerHTML = teksAsliBtn;
             btnSubmitTema.disabled = false;
