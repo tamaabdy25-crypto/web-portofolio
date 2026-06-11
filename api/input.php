@@ -220,7 +220,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
               <img id="preview-theme" src="#" alt="Pratinjau Gambar">
              <p class="small text-muted mb-3">
     <i class="bi bi-info-circle me-1"></i>Pilih foto HD untuk wallpaper. Jika terang, logo & ikon otomatis menjadi gelap.
-    <strong class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Maksimal ukuran file: 4.5MB</strong>
+    <strong class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Maksimal ukuran file: 4,5MB</strong>
 </p>
               <input type="file" name="wallpaper" id="input-wallpaper" class="form-control mb-2" accept="image/*">
           </div>
@@ -581,7 +581,7 @@ function simpanData(event, tipeAksi) {
     let formData = new FormData(form);
     formData.append('action', tipeAksi);
 
-    let btn = document.getElementById(btn);
+    let btn = document.getElementById(idBtn);
     let originalText = btn.innerHTML;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Loading...`;
     btn.disabled = true;
@@ -600,7 +600,7 @@ function simpanData(event, tipeAksi) {
             Swal.fire({ icon: 'success', title: data.pesan, showConfirmButton: false, timer: 1500 });
             loadTabelUser(); 
         } else {
-            let contentDiv = document.getElementById(contentDiv);
+            let contentDiv = document.getElementById(idContent);
             contentDiv.classList.add('shake-modal');
             setTimeout(() => contentDiv.classList.remove('shake-modal'), 1000);
             
@@ -769,29 +769,33 @@ $(document).ready(function() {
     });
 });
 
-// --- 🔥 SATPAM FRONTEND BUAT UPLOAD TEMA (4.5MB SAKLEK) ---
+    // --- SATPAM FRONTEND BUAT UPLOAD TEMA (4,5MB) ---
 const formTema = document.getElementById('formTema'); 
 const inputWallpaper = document.getElementById('input-wallpaper'); 
 
 if (formTema && inputWallpaper) {
+    // 1. Kita tangkep tombol submitnya biar bisa kita kendaliin
     const btnSubmitTema = formTema.querySelector('button[type="submit"]');
+    // 2. Simpan teks aslinya biar bisa dibalikin (misal: "Simpan" atau "Terapkan")
     const teksAsliBtn = btnSubmitTema ? btnSubmitTema.innerHTML : 'Terapkan';
 
     formTema.addEventListener('submit', function(e) {
         const file = inputWallpaper.files[0];
 
         if (file) {
-            // 💡 4.5MB = 4.5 * 1024 * 1024 = 4718592 bytes
-            if (file.size > 4718592) { 
+            if (file.size > 4718592) { // 4,5MB = 4718592 bytes
+                // STOP SEMUANYA TERMASUK ANIMASI LOADING LAIN!
                 e.preventDefault(); 
                 e.stopImmediatePropagation(); 
                 
+                // Balikin tombol kayak semula, cabut efek loading-nya!
                 if (btnSubmitTema) {
                     btnSubmitTema.innerHTML = teksAsliBtn;
                     btnSubmitTema.disabled = false;
                     btnSubmitTema.classList.remove('disabled');
                 }
 
+                // Munculin pesan error kotak merah
                 let errorMsg = document.getElementById('error-tema-size');
                 if (!errorMsg) {
                     errorMsg = document.createElement('div');
@@ -799,13 +803,13 @@ if (formTema && inputWallpaper) {
                     errorMsg.className = 'text-error-shake fw-bold text-start mb-2';
                     errorMsg.style.color = '#ef4444';
                     errorMsg.style.fontSize = '13px';
-                    // 🔥 UPDATE PESAN TEXT ERROR JADI 4.5MB
-                    errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Gagal: Ukuran wallpaper maksimal 4.5MB!';
+                    errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Gagal: Ukuran wallpaper maksimal 4,5MB!';
                     inputWallpaper.parentNode.insertBefore(errorMsg, inputWallpaper.nextSibling);
                 }
                 
                 errorMsg.style.display = 'block'; 
                 
+                // Efek getar
                 inputWallpaper.classList.remove('shake-animation');
                 void inputWallpaper.offsetWidth; 
                 inputWallpaper.classList.add('shake-animation');
@@ -813,11 +817,13 @@ if (formTema && inputWallpaper) {
         }
     });
 
+    // Kalau user sadar dan ganti foto lain
     inputWallpaper.addEventListener('change', function() {
         const errorMsg = document.getElementById('error-tema-size');
         if (errorMsg) errorMsg.style.display = 'none';
         this.classList.remove('shake-animation'); 
         
+        // Pastiin tombol bisa diklik normal lagi
         if (btnSubmitTema) {
             btnSubmitTema.innerHTML = teksAsliBtn;
             btnSubmitTema.disabled = false;
