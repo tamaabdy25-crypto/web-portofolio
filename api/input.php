@@ -407,6 +407,13 @@ document.getElementById('input-wallpaper').addEventListener('change', function()
 
 function simpanTema(event) {
     event.preventDefault();
+    
+    // 🔥 SUNTIKAN SAKLI ANTI-RACE CONDITION: Hadang fetch dari awal jika file kegedean!
+    let inputWpCheck = document.getElementById('input-wallpaper');
+    if (inputWpCheck && inputWpCheck.files[0] && inputWpCheck.files[0].size > 4718592) {
+        return false; // ⛔ STOP INSTAN DI SINI! Jangan ijinkan fetch berjalan di latar belakang!
+    }
+
     let form = document.getElementById('formTema');
     let formData = new FormData(form);
     formData.append('set_theme', 'true');
@@ -769,14 +776,12 @@ $(document).ready(function() {
     });
 });
 
-    // --- SATPAM FRONTEND BUAT UPLOAD TEMA (4.5MB) ---
+// --- SATPAM FRONTEND BUAT UPLOAD TEMA (4.5MB) ---
 const formTema = document.getElementById('formTema'); 
 const inputWallpaper = document.getElementById('input-wallpaper'); 
 
 if (formTema && inputWallpaper) {
-    // 1. Kita tangkep tombol submitnya biar bisa kita kendaliin
     const btnSubmitTema = formTema.querySelector('button[type="submit"]');
-    // 2. Simpan teks aslinya biar bisa dibalikin (misal: "Simpan" atau "Terapkan")
     const teksAsliBtn = btnSubmitTema ? btnSubmitTema.innerHTML : 'Terapkan';
 
     formTema.addEventListener('submit', function(e) {
