@@ -72,6 +72,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
         
+        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
         body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #334155; margin: 0; }
         body::before {
             content: "";
@@ -80,7 +81,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
             left: 0;
             width: 100%;
             height: 100vh;
-            height: 100dvh; 
+            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
             z-index: -99;
             background-color: #f8f9fa;
             background-size: cover;
@@ -374,7 +375,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
       <div class="modal-header bg-light border-bottom-0 py-3">
-        <h6 class="modal-title fw-bold text-success mb-0" id="modalUndanganTitle"><i class="bi bi-people-fill me-2"></i>Daftar Peserta Undangan</h6>
+        <h6 class="modal-title fw-bold text-success mb-0" id="modalUndanganTitle"><i class="bi bi-people-fill me-2"></i>Daftar Undangan</h6>
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body p-3">
@@ -525,7 +526,7 @@ function loadTabelUser() {
                     btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai sebagai selesai.', '#10b981', 'Selesai')" style="background:none; border:none; color:#10b981; padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
                 }
 
-                // 🔥 AMAN: MEMASUKKAN TOMBOL LIHAT DAFTAR UNDANGAN DI KOLOM TENGAH (TANGGAL & WAKTU) 🔥
+                // 🔥 MERGE FIX SAKLEK: Tombol dipasang di container block ber-margin biar lurus, rapih, dan presisi!
                 htmlTabel += `
                     <tr ${rowStyle}>
                         <td>
@@ -535,9 +536,12 @@ function loadTabelUser() {
                         <td>
                             <div class="fw-bold" style="font-size:16px; color: #000000; line-height:1.2;">${row.tanggal_indo}</div>
                             <div class="text-muted mb-1" style="font-size: 12px;"><i class="bi bi-clock me-1"></i>${row.jam_format} WIB</div>
-                            <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 btn-lihat-undangan-responsive" style="font-size: 11px; border-radius: 8px; font-weight: 600;" onclick="event.preventDefault(); tampilkanUndangan('${safeTitle}', '${encodeURIComponent(row.peserta || '')}')">
-                                <i class="bi bi-people-fill me-1"></i> Lihat Daftar Undangan
-                            </button>
+                            <div class="mt-2" style="max-width: 165px;">
+                                <button type="button" class="btn btn-sm btn-outline-success py-1 px-2 btn-lihat-undangan-responsive w-100 text-start d-flex align-items-center justify-content-between" style="font-size: 11px; border-radius: 8px; font-weight: 600; border-color: rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.02);" onclick="event.preventDefault(); tampilkanUndangan('${safeTitle}', '${encodeURIComponent(row.peserta || '')}')">
+                                    <span><i class="bi bi-people-fill me-1"></i> Lihat Daftar Undangan</span>
+                                    <i class="bi bi-chevron-right small opacity-50"></i>
+                                </button>
+                            </div>
                         </td>
                         <td style="text-align: center; vertical-align: middle;">${statusBadge}${progressBar}</td>
                         <td style="text-align: center; vertical-align: middle;">${btnAksi}</td>
@@ -554,9 +558,9 @@ function loadTabelUser() {
 setInterval(loadTabelUser, 5000); 
 loadTabelUser(); 
 
-// 🔥 AMAN: FUNGSI INTERAKTIF BARU UNTUK MERENDER DAN MEMBUKA POPUP NAMA UNDANGAN 🔥
+// 🔥 MERGE FIX SAKLEK: Modifikasi render data JS agar judul utama modal tetep "Daftar Undangan" dan nama agenda ditaruh manis jadi badge sampingnya!
 function tampilkanUndangan(title, dataPesertaEncoded) {
-    document.getElementById('modalUndanganTitle').innerHTML = `<i class="bi bi-people-fill me-2"></i>Undangan: ${title}`;
+    document.getElementById('modalUndanganTitle').innerHTML = `<i class="bi bi-people-fill me-2"></i>Daftar Undangan <span class="badge bg-light text-secondary border ms-2 fw-normal" style="font-size: 12px; letter-spacing: 0.02em;">${title}</span>`;
     let listContainer = document.getElementById('listUndanganPeserta');
     listContainer.innerHTML = '';
     
