@@ -27,7 +27,6 @@ date_default_timezone_set('Asia/Jakarta');
             padding: 20px; 
             margin: 0; 
             min-height: 100vh;
-            $user_wallpaper
         }
 
         .display-container { max-width: 1200px; margin: auto; }
@@ -153,81 +152,52 @@ date_default_timezone_set('Asia/Jakarta');
         }
 
         /* =================================================================
-           🔥 SEKSI TAMBAHAN SAKTI: ATURAN RESPONSIVE ENGINE (ANTI-BERANTAKAN) 🔥
+           🔥 SEKSI RESPONSIVE ANTI-MELOROT (100% MODERASI GESER SAMPING) 🔥
            ================================================================= */
         @media (max-width: 992px) {
+            /* Paksa Header tetap berjejer kesamping dan aktifkan geser horizontal jika mentok */
             .header-section {
-                flex-direction: column;
+                overflow-x: auto;
+                white-space: nowrap;
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between;
                 align-items: center;
-                text-align: center;
-                gap: 25px;
+                gap: 30px;
+                padding-bottom: 20px;
+                -webkit-overflow-scrolling: touch;
             }
-            .brand-box {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
+            .brand-box, .right-box {
+                flex-shrink: 0; /* Cegah elemen mengkerut gepeng */
             }
-            .logo-split-container {
-                justify-content: center;
+            /* Hilangkan scrollbar kaku bawaan browser agar tetap estetik bersih */
+            .header-section::-webkit-scrollbar {
+                height: 0px !important;
+                display: none !important;
             }
-            .right-box {
-                align-items: center;
-                gap: 15px;
+            .header-section {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
             }
         }
 
-        @media (max-width: 576px) {
+        @media (max-width: 768px) {
             body {
                 padding: 12px;
             }
-            .weather-mini {
-                flex-direction: column;
+            /* 🔥 SAKLEK KUNCI: Bungkus area tabel agar bisa digeser kanan-kiri ala dashboard */
+            #data-meeting {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
                 width: 100%;
-                gap: 10px;
             }
-            .weather-item {
-                width: 100%;
-                justify-content: center;
+            #data-meeting table {
+                min-width: 700px; /* Paksa lebar minimum tabel biar teksnya berjejer gak patah ke bawah */
             }
             .clock-box {
                 font-size: 28px;
-                padding: 10px 20px;
-                min-width: 100%;
-            }
-            
-            /* TRANFORMA TANGGAPAN TABEL MENJADI FORMAT CARD FLUID */
-            #data-meeting table, 
-            #data-meeting thead, 
-            #data-meeting tbody, 
-            #data-meeting th, 
-            #data-meeting td, 
-            #data-meeting tr { 
-                display: block !important; 
-                width: 100% !important; 
-            }
-            #data-meeting thead { 
-                display: none !important; /* Sembunyikan header tabel di mobile */
-            }
-            #data-meeting tr { 
-                margin-bottom: 15px !important; 
-                border-radius: 16px !important;
-                background: var(--card-white);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important;
-                padding: 12px 0;
-            }
-            #data-meeting td { 
-                text-align: center !important; 
-                padding: 8px 20px !important; 
-                white-space: normal !important; 
-                border-radius: 0 !important;
-            }
-            /* Styling khusus elemen di dalam baris agar tetap sedap dipandang */
-            .meeting-title {
-                font-size: 1rem;
-            }
-            .room-badge {
-                display: inline-block;
-                margin-top: 4px;
+                padding: 10px 18px;
+                min-width: 160px;
             }
         }
     </style>
