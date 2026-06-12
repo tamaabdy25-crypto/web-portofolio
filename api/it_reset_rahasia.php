@@ -61,7 +61,7 @@ if (isset($_POST['register_akun_ajax'])) {
     // 1. Cek Duplikat Nomor Induk
     $cek_nik = pg_query($conn, "SELECT id FROM users WHERE nomor_induk='$no_induk'");
     if (pg_num_rows($cek_nik) > 0) {
-        echo json_encode(["status" => "error", "pesan" => "Gagal: Nomor Induk sudah terdaftar!"]);
+        echo json_encode(["status" => "error", "pesan" => "Gagal: Nomor Registrasi Pegawai sudah terdaftar!"]);
         exit;
     }
 
@@ -445,7 +445,7 @@ $query_user = pg_query($conn, "SELECT id, nama_lengkap, nomor_induk, email, role
       <form id="formRegisterUser" onsubmit="registerAkunAjax(event)">
           <div class="modal-body">
               <div class="mb-3">
-                  <label class="form-label">Nomor Induk Karyawan</label>
+                  <label class="form-label">Nomor Registrasi Pegawai</label>
                   <input type="text" name="no_induk" class="form-control" placeholder="Contoh: 2023001" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
               </div>
               <div class="mb-3">
