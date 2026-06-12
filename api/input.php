@@ -277,7 +277,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
                       <div class="input-group">
                           <span class="input-group-text bg-white border-end-0"><i class="bi bi-door-open text-muted"></i></span>
                           <select name="room_name" id="tambah_room" class="form-select border-start-0 ps-0 text-truncate" style="padding-right: 30px; text-overflow: ellipsis;" required>
-                              <option value="" disabled selected>-- Pilih Ruangan --</option>
+                              <option value=""" disabled selected>-- Pilih Ruangan --</option>
                               <option value="RUANG MEETING SYNERGY 7">RUANG MEETING SYNERGY 7</option>
                               <option value="RUANG MEETING EXCELENT">RUANG MEETING EXCELENT</option>
                               <option value="RUANG MEETING DEPAN HCGS">RUANG MEETING DEPAN HCGS</option>
@@ -436,8 +436,28 @@ function simpanTema(event) {
     event.preventDefault();
     
     let inputWpCheck = document.getElementById('input-wallpaper');
+    
+    // 🔥 FIX UTAMA SAKLEK: Ketika file diatas 4.2MB, buat notif teks merah dan getarkan modal agar tombol TIDAK TERASA MATI!
     if (inputWpCheck && inputWpCheck.files[0] && inputWpCheck.files[0].size > 4404019) {
-        return false; 
+        let btnSubmitTema = document.getElementById('btn-tema');
+        let errorMsg = document.getElementById('error-tema-size');
+        if (!errorMsg) {
+            errorMsg = document.createElement('div');
+            errorMsg.id = 'error-tema-size';
+            errorMsg.className = 'text-error-shake fw-bold text-start mb-2';
+            errorMsg.style.color = '#ef4444';
+            errorMsg.style.fontSize = '13px';
+            errorMsg.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Gagal: Ukuran wallpaper maksimal 4.2MB!';
+            inputWpCheck.parentNode.insertBefore(errorMsg, inputWpCheck.nextSibling);
+        }
+        
+        errorMsg.style.display = 'block'; 
+        
+        inputWpCheck.classList.remove('shake-animation');
+        void inputWpCheck.offsetWidth; 
+        inputWpCheck.classList.add('shake-animation');
+        
+        return false; // ⛔ HADANG TOTAL DI SINI!
     }
 
     let form = document.getElementById('formTema');
@@ -486,7 +506,6 @@ function loadTabelUser() {
     .then(res => {
         if(res.status !== 'success') return;
         
-        // 🔥 UPDATE 1: Tambah kolom <th>Daftar Undangan</th> di header tabel agar berjejer rapi
         let htmlTabel = `
         <table class="table table-hover align-middle mb-0">
             <thead>
@@ -501,7 +520,6 @@ function loadTabelUser() {
             <tbody>`;
 
         if(res.data.length === 0) {
-            // 🔥 UPDATE 2: Ubah colspan jadi 5 agar pas di tengah jika tabel kosong
             htmlTabel += `<tr>
                 <td colspan="5" class="text-center py-5 text-muted">
                     <div style="margin: 0 auto 15px auto; height: 55px; width: 280px; background-color: #64748b; -webkit-mask: url('logo_evision2.png') no-repeat center; mask: url('logo_evision2.png') no-repeat center; -webkit-mask-size: contain; mask-size: contain; opacity: 0.85;"></div>
@@ -523,10 +541,9 @@ function loadTabelUser() {
                     rowStyle = `style="background: rgba(16, 185, 129, 0.03);"`;
                     statusBadge = `<span class="status-badge" style="background:#dcfce7; color:#16a34a; font-size:10px; padding:4px 10px; border-radius:10px; font-weight:700;">BERLANGSUNG</span>`;
                     progressBar = `<div style="height: 4px; width: 60px; background: #e2e8f0; border-radius: 10px; margin: 5px auto 0; overflow: hidden;"><div style="height: 100%; width: ${row.persen_jalan}%; background: #10b981;"></div></div>`;
-                    btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai as selesai.', '#10b981', 'Selesai')" style="background:none; border:none; color:#10b981; padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
+                    btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai sebagai selesai.', '#10b981', 'Selesai')" style="background:none; border:none; color:#10b981; padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
                 }
 
-                // 🔥 UPDATE 3: Pisahkan tombol ke dalam <td> baru tersendiri agar lurus sejajar sesuai instruksi foto
                 htmlTabel += `
                     <tr ${rowStyle}>
                         <td>
@@ -868,7 +885,9 @@ if (formTema && inputWallpaper) {
         const file = inputWallpaper.files[0];
 
         if (file) {
-            if (file.size > 4718592) { 
+            // 🔥 Amankan batas ketat Vercel: 4.2MB = 4404019 Bytes
+            if (file.size > 4404019) { 
+                // HALANGI EKSEKUSI FORM SECARA TOTAL
                 e.preventDefault(); 
                 e.stopImmediatePropagation(); 
                 
