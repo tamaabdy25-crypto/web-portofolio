@@ -7,7 +7,7 @@ date_default_timezone_set('Asia/Jakarta');
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>E-VISION - Display</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -27,6 +27,7 @@ date_default_timezone_set('Asia/Jakarta');
             padding: 20px; 
             margin: 0; 
             min-height: 100vh;
+            $user_wallpaper
         }
 
         .display-container { max-width: 1200px; margin: auto; }
@@ -150,6 +151,85 @@ date_default_timezone_set('Asia/Jakarta');
             align-items: flex-end; 
             justify-content: space-between; /* JAM KEDORONG MENTOK BAWAH SEJAJAR KIRI */
         }
+
+        /* =================================================================
+           🔥 SEKSI TAMBAHAN SAKTI: ATURAN RESPONSIVE ENGINE (ANTI-BERANTAKAN) 🔥
+           ================================================================= */
+        @media (max-width: 992px) {
+            .header-section {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 25px;
+            }
+            .brand-box {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .logo-split-container {
+                justify-content: center;
+            }
+            .right-box {
+                align-items: center;
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 12px;
+            }
+            .weather-mini {
+                flex-direction: column;
+                width: 100%;
+                gap: 10px;
+            }
+            .weather-item {
+                width: 100%;
+                justify-content: center;
+            }
+            .clock-box {
+                font-size: 28px;
+                padding: 10px 20px;
+                min-width: 100%;
+            }
+            
+            /* TRANFORMA TANGGAPAN TABEL MENJADI FORMAT CARD FLUID */
+            #data-meeting table, 
+            #data-meeting thead, 
+            #data-meeting tbody, 
+            #data-meeting th, 
+            #data-meeting td, 
+            #data-meeting tr { 
+                display: block !important; 
+                width: 100% !important; 
+            }
+            #data-meeting thead { 
+                display: none !important; /* Sembunyikan header tabel di mobile */
+            }
+            #data-meeting tr { 
+                margin-bottom: 15px !important; 
+                border-radius: 16px !important;
+                background: var(--card-white);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important;
+                padding: 12px 0;
+            }
+            #data-meeting td { 
+                text-align: center !important; 
+                padding: 8px 20px !important; 
+                white-space: normal !important; 
+                border-radius: 0 !important;
+            }
+            /* Styling khusus elemen di dalam baris agar tetap sedap dipandang */
+            .meeting-title {
+                font-size: 1rem;
+            }
+            .room-badge {
+                display: inline-block;
+                margin-top: 4px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -207,7 +287,6 @@ date_default_timezone_set('Asia/Jakarta');
         const card = document.getElementById(elementId);
         const icon = document.getElementById(iconId);
         
-        // Proteksi jika data kosong/null agar tidak merusak JS
         if (code === undefined || code === null) return;
         
         card.classList.remove('weather-sunny', 'weather-cloudy', 'weather-rainy');
@@ -225,17 +304,14 @@ date_default_timezone_set('Asia/Jakarta');
     }
 
     function updateWeather() {
-        // PERBAIKAN: Memanggil parameter weather_code dan weathercode sekaligus agar aman
         fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2088&longitude=106.8456&current_weather=true&daily=temperature_2m_max,weather_code,weathercode&timezone=Asia%2FJakarta')
             .then(response => response.json())
             .then(data => {
-                // Ambil Data Hari Ini dengan Proteksi Nama Kolom Baru/Lama
                 const current = data.current_weather;
                 const codeToday = (current.weather_code !== undefined) ? current.weather_code : current.weathercode;
                 document.getElementById('temp-today').innerText = Math.round(current.temperature) + '°C';
                 applyWeatherStyle('card-today', 'icon-today', codeToday);
                 
-                // Ambil Data Besok dengan Proteksi Nama Kolom Baru/Lama
                 const daily = data.daily;
                 const codeTomorrow = (daily.weather_code !== undefined) ? daily.weather_code[1] : daily.weathercode[1];
                 document.getElementById('temp-tomorrow').innerText = Math.round(daily.temperature_2m_max[1]) + '°C';
