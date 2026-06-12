@@ -43,7 +43,7 @@ if (isset($_POST['login'])) {
             $error = "Password salah!"; 
         }
     } else { 
-        $error = "Nomor Induk tidak ditemukan!"; 
+        $error = "Nomor Registrasi Pegawai tidak ditemukan!"; 
     }
 }
 ?>
@@ -187,12 +187,12 @@ if (isset($_POST['login'])) {
 
             <div class="mb-4 text-start">
                 <h3 class="fw-bold text-dark mb-1" style="font-size: 1.5rem;">Login Akun</h3>
-                <p class="text-muted small">Silakan masuk untuk melanjutkan.</p>
+                <p class="text-muted small">Silakan masuk ke akun yang sudah di daftarkan.</p>
             </div>
 
             <form method="POST">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold mobile-label">Nomor Induk</label>
+                    <label class="form-label small fw-bold mobile-label">Nomor Registrasi Pegawai</label>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px;"><i class="bi bi-person text-muted"></i></span>
                         <input type="text" name="nomor_induk" class="form-control border-start-0" 
@@ -241,7 +241,7 @@ if (isset($_POST['login'])) {
     function pesanLupaPw() {
         Swal.fire({
             title: 'Lupa Password?',
-            html: 'Silakan hubungi <b>Tim IT</b> atau datang ke ruang admin untuk melakukan reset password akun Anda.',
+            html: 'Silakan hubungi <b>Tim IT</b> untuk melakukan reset password akun Anda.',
             icon: 'info',
             confirmButtonColor: '#10b981',
             confirmButtonText: 'Siap, Mengerti'
