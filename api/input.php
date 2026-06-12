@@ -72,7 +72,6 @@ $user_foto = $data_user['foto_profil'] ?? "";
     <style>
         :root { --theme-primary: #10b981; }
         
-        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
         body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; color: #334155; margin: 0; }
         body::before {
             content: "";
@@ -81,7 +80,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
             left: 0;
             width: 100%;
             height: 100vh;
-            height: 100dvh; /* Dynamic Viewport Height (Kunci Utama) */
+            height: 100dvh; 
             z-index: -99;
             background-color: #f8f9fa;
             background-size: cover;
@@ -436,11 +435,9 @@ document.getElementById('input-wallpaper').addEventListener('change', function()
 function simpanTema(event) {
     event.preventDefault();
     
-    // 🔥 SATPAM PENJAGA GERBANG UTAMA DIUBAH MENJADI KAPASITAS 4.2MB 🔥
     let inputWpCheck = document.getElementById('input-wallpaper');
-    // 💡 4.2MB = 4.2 * 1024 * 1024 = 4404019 Bytes
     if (inputWpCheck && inputWpCheck.files[0] && inputWpCheck.files[0].size > 4404019) {
-        return false; // ⛔ BLOKIR MUTLAK DI SINI! Jangan biarkan request kosong terkirim!
+        return false; 
     }
 
     let form = document.getElementById('formTema');
@@ -489,12 +486,14 @@ function loadTabelUser() {
     .then(res => {
         if(res.status !== 'success') return;
         
+        // 🔥 UPDATE 1: Tambah kolom <th>Daftar Undangan</th> di header tabel agar berjejer rapi
         let htmlTabel = `
         <table class="table table-hover align-middle mb-0">
             <thead>
                 <tr>
                     <th>Agenda & Ruang</th>
                     <th>Tanggal & Waktu</th>
+                    <th>Daftar Undangan</th>
                     <th style="text-align: center;">Status</th>
                     <th style="text-align: center;">Aksi</th>
                 </tr>
@@ -502,8 +501,9 @@ function loadTabelUser() {
             <tbody>`;
 
         if(res.data.length === 0) {
+            // 🔥 UPDATE 2: Ubah colspan jadi 5 agar pas di tengah jika tabel kosong
             htmlTabel += `<tr>
-                <td colspan="4" class="text-center py-5 text-muted">
+                <td colspan="5" class="text-center py-5 text-muted">
                     <div style="margin: 0 auto 15px auto; height: 55px; width: 280px; background-color: #64748b; -webkit-mask: url('logo_evision2.png') no-repeat center; mask: url('logo_evision2.png') no-repeat center; -webkit-mask-size: contain; mask-size: contain; opacity: 0.85;"></div>
                     <span style="font-weight: 500; font-size: 15px;">Belum ada jadwal meeting yang kamu buat.</span>
                 </td>
@@ -523,10 +523,10 @@ function loadTabelUser() {
                     rowStyle = `style="background: rgba(16, 185, 129, 0.03);"`;
                     statusBadge = `<span class="status-badge" style="background:#dcfce7; color:#16a34a; font-size:10px; padding:4px 10px; border-radius:10px; font-weight:700;">BERLANGSUNG</span>`;
                     progressBar = `<div style="height: 4px; width: 60px; background: #e2e8f0; border-radius: 10px; margin: 5px auto 0; overflow: hidden;"><div style="height: 100%; width: ${row.persen_jalan}%; background: #10b981;"></div></div>`;
-                    btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai sebagai selesai.', '#10b981', 'Selesai')" style="background:none; border:none; color:#10b981; padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
+                    btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai as selesai.', '#10b981', 'Selesai')" style="background:none; border:none; color:#10b981; padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
                 }
 
-                // 🔥 MERGE FIX SAKLEK: Tombol dipasang di container block ber-margin biar lurus, rapih, dan presisi!
+                // 🔥 UPDATE 3: Pisahkan tombol ke dalam <td> baru tersendiri agar lurus sejajar sesuai instruksi foto
                 htmlTabel += `
                     <tr ${rowStyle}>
                         <td>
@@ -536,7 +536,9 @@ function loadTabelUser() {
                         <td>
                             <div class="fw-bold" style="font-size:16px; color: #000000; line-height:1.2;">${row.tanggal_indo}</div>
                             <div class="text-muted mb-1" style="font-size: 12px;"><i class="bi bi-clock me-1"></i>${row.jam_format} WIB</div>
-                            <div class="mt-2" style="max-width: 165px;">
+                        </td>
+                        <td>
+                            <div style="max-width: 165px;">
                                 <button type="button" class="btn btn-sm btn-outline-success py-1 px-2 btn-lihat-undangan-responsive w-100 text-start d-flex align-items-center justify-content-between" style="font-size: 11px; border-radius: 8px; font-weight: 600; border-color: rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.02);" onclick="event.preventDefault(); tampilkanUndangan('${safeTitle}', '${encodeURIComponent(row.peserta || '')}')">
                                     <span><i class="bi bi-people-fill me-1"></i> Lihat Daftar Undangan</span>
                                     <i class="bi bi-chevron-right small opacity-50"></i>
@@ -558,7 +560,6 @@ function loadTabelUser() {
 setInterval(loadTabelUser, 5000); 
 loadTabelUser(); 
 
-// 🔥 MERGE FIX SAKLEK: Modifikasi render data JS agar judul utama modal tetep "Daftar Undangan" dan nama agenda ditaruh manis jadi badge sampingnya!
 function tampilkanUndangan(title, dataPesertaEncoded) {
     document.getElementById('modalUndanganTitle').innerHTML = `<i class="bi bi-people-fill me-2"></i>Daftar Undangan <span class="badge bg-light text-secondary border ms-2 fw-normal" style="font-size: 12px; letter-spacing: 0.02em;">${title}</span>`;
     let listContainer = document.getElementById('listUndanganPeserta');
@@ -867,9 +868,7 @@ if (formTema && inputWallpaper) {
         const file = inputWallpaper.files[0];
 
         if (file) {
-            // 🔥 Amankan batas ketat Vercel: 4.2MB = 4404019 Bytes
-            if (file.size > 4404019) { 
-                // HALANGI EKSEKUSI FORM SECARA TOTAL
+            if (file.size > 4718592) { 
                 e.preventDefault(); 
                 e.stopImmediatePropagation(); 
                 
