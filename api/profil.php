@@ -16,27 +16,57 @@ $query_user = pg_query($conn, "SELECT * FROM users WHERE id = '$user_id'");
 $user = pg_fetch_assoc($query_user);
 
 // ==============================================================
-// 💡 BLOK BARU: AKSI UBAH PASSWORD (SISTEM AJAX ANTI-LOADING)
+// 💡 EXTENDED BLOK: AKSI EDIT PROFIL & PASSWORD (AJAX ANTI-LOADING)
 // ==============================================================
 if (isset($_POST['update_password_ajax'])) {
     header('Content-Type: application/json');
-    $pw_lama = $_POST['pw_lama'];
-    $pw_baru = $_POST['pw_baru'];
-    $konf_pw = $_POST['konfirmasi_pw'];
+    
+    $nama_baru  = pg_escape_string($conn, $_POST['nama_lengkap']);
+    $email_baru = pg_escape_string($conn, $_POST['email']);
+    $pw_lama    = $_POST['pw_lama'];
+    $pw_baru    = $_POST['pw_baru'] ?? '';
+    $konf_pw    = $_POST['konfirmasi_pw'] ?? '';
 
+    // 1. Verifikasi Password Lama wajib benar sebagai pengaman kunci brankas
     if (!password_verify($pw_lama, $user['password'])) {
-        echo json_encode(["status" => "error", "pesan" => "Password lama salah!"]);
-    } else if (password_verify($pw_baru, $user['password'])) {
-        // 💡 GEMBOK BARU: Gak boleh pake password yang sama persis
-        echo json_encode(["status" => "error", "pesan" => "Password baru tidak boleh sama dengan yang lama!"]);
-    } else if (strlen($pw_baru) < 6) {
-        echo json_encode(["status" => "error", "pesan" => "Password baru minimal 6 karakter!"]);
-    } else if ($pw_baru !== $konf_pw) {
-        echo json_encode(["status" => "error", "pesan" => "Konfirmasi password tidak cocok!"]);
-    } else {
+        echo json_encode(["status" => "error", "pesan" => "Password lama salah! Konfirmasi password saat ini wajib benar untuk menyimpan data."]);
+        exit;
+    }
+    
+    // 2. Validasi format email inputan user
+    if (!filter_var($email_baru, FILTER_VALIDATE_EMAIL)) {
+        echo json_encode(["status" => "error", "pesan" => "Format email tidak valid! Use format: nama@domain.com"]);
+        exit;
+    }
+
+    // Bangun struktur string SQL Update dasar (Nama & Email)
+    $query_update = "UPDATE users SET nama_lengkap = '$nama_baru', email = '$email_baru'";
+
+    // 3. Jika user juga mengisi kolom password baru (Ingin ganti password sekalian)
+    if (!empty($pw_baru)) {
+        if (password_verify($pw_baru, $user['password'])) {
+            echo json_encode(["status" => "error", "pesan" => "Password baru tidak boleh sama dengan yang lama!"]);
+            exit;
+        } else if (strlen($pw_baru) < 6) {
+            echo json_encode(["status" => "error", "pesan" => "Password baru minimal 6 karakter!"]);
+            exit;
+        } else if ($pw_baru !== $konf_pw) {
+            echo json_encode(["status" => "error", "pesan" => "Konfirmasi password tidak cocok!"]);
+            exit;
+        }
         $hashed_baru = password_hash($pw_baru, PASSWORD_DEFAULT);
-        pg_query($conn, "UPDATE users SET password = '$hashed_baru' WHERE id = '$user_id'");
-        echo json_encode(["status" => "success", "pesan" => "Password berhasil diperbarui!"]);
+        $query_update .= ", password = '$hashed_baru'";
+    }
+
+    $query_update .= " WHERE id = '$user_id'";
+    $execute_update = pg_query($conn, $query_update);
+
+    if ($execute_update) {
+        // Update session live biar nama lengkap di dashboard langsung berubah tanpa re-login
+        $_SESSION['nama_lengkap'] = $nama_baru;
+        echo json_encode(["status" => "success", "pesan" => "Data profil dan identitas Anda berhasil diperbarui!"]);
+    } else {
+        echo json_encode(["status" => "error", "pesan" => "Gagal menyimpan perubahan ke database Supabase!"]);
     }
     exit; // Stop render HTML, cukup kirim JSON ke Javascript
 }
@@ -167,7 +197,6 @@ if (isset($_POST['aksi_foto'])) {
     <style>
         :root { --theme-primary: #10b981; }
 
-        /* 💡 PERBAIKAN: Pisahin style body dan bikin layar kaca bayangan (body::before) buat anti-lompat */
         body { 
             background-color: #f1f5f9; 
             font-family: 'Inter', sans-serif; 
@@ -190,7 +219,6 @@ if (isset($_POST['aksi_foto'])) {
             transition: background 0.5s ease;
         }
 
-        /* Overlay full mentok bawah */
         .page-overlay {
             background: rgba(255, 255, 255, 0.2); 
             min-height: 100vh;
@@ -199,7 +227,6 @@ if (isset($_POST['aksi_foto'])) {
             width: 100%;
         }
 
-        /* --- LOGO DINAMIS (MENGIKUTI TEMA) --- */
         .dynamic-logo {
             height: 28px;
             width: 100px;
@@ -213,7 +240,6 @@ if (isset($_POST['aksi_foto'])) {
             vertical-align: middle;
         }
 
-        /* Modifikasi Header biar seragam dengan halaman lain */
         .sticky-header { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); z-index: 100; padding: 20px 0; border-bottom: 2px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
             margin-bottom: 30px;
         }
@@ -238,12 +264,11 @@ if (isset($_POST['aksi_foto'])) {
             width: 100px; height: 100px; border-radius: 50%; background: #fff; 
             border: 4px solid #fff; display: flex; align-items: center; 
             justify-content: center; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-            position: relative; /* Penting untuk tombol kamera */
+            position: relative;
         }
         .avatar-circle i.icon-default { font-size: 3.5rem; color: #cbd5e1; }
         .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Tombol Kamera Kecil di Foto Profil */
         .btn-edit-foto {
             position: absolute;
             bottom: -5px;
@@ -262,7 +287,7 @@ if (isset($_POST['aksi_foto'])) {
             transition: all 0.2s ease;
             z-index: 10;
         }
-        .btn-edit-foto:hover { background: var(--theme-primary); color: white; transform: scale(1.1); }
+        .btn-edit-foto:pointer { background: var(--theme-primary); color: white; transform: scale(1.1); }
 
         .info-label { font-size: 12px; color: #475569; font-weight: 600; text-transform: uppercase; }
         .info-value { font-size: 16px; color: #000000 !important; font-weight: 700; margin-bottom: 15px; }
@@ -275,12 +300,10 @@ if (isset($_POST['aksi_foto'])) {
             color: var(--theme-primary) !important; 
         }
 
-        /* --- FIX TOMBOL KEMBALI BIAR GAK HIJAU PAS DIKLIK --- */
         .btn-outline-success { 
             color: var(--theme-primary) !important; 
             border-color: var(--theme-primary) !important; 
         }
-        /* Mengunci semua state: hover, focus, active, dan pas ditekan */
         .btn-outline-success:hover,
         .btn-outline-success:focus,
         .btn-outline-success:active,
@@ -288,7 +311,7 @@ if (isset($_POST['aksi_foto'])) {
             background-color: var(--theme-primary) !important; 
             color: white !important; 
             border-color: var(--theme-primary) !important; 
-            box-shadow: none !important; /* Hilangin shadow biru/hijau bawaan bootstrap */
+            box-shadow: none !important; 
         }
         
         .status-pill { font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 700; }
@@ -305,9 +328,6 @@ if (isset($_POST['aksi_foto'])) {
             .d-flex.gap-2.justify-content-center { justify-content: center !important; }
         }
 
-        /* =======================================================
-           ANIMASI SHAKE BUAT UPLOAD FOTO & GANTI PASSWORD
-           ======================================================= */
         @keyframes shakeError {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-5px); }
@@ -322,11 +342,10 @@ if (isset($_POST['aksi_foto'])) {
 
         .shake-animation {
             animation: shakeError 0.4s ease-in-out;
-            border: 2px solid #ef4444 !important; /* Kotak jadi merah */
+            border: 2px solid #ef4444 !important; 
             background-color: #fef2f2 !important;
         }
 
-        /* Animasi Getar Khusus Modal Password */
         .shake-modal { 
             animation: shakeModal 0.3s ease-in-out 0s 2; 
             border: 2px solid #ef4444 !important; 
@@ -335,7 +354,7 @@ if (isset($_POST['aksi_foto'])) {
         .text-error-shake {
             color: #ef4444;
             font-size: 13px;
-            display: none; /* Sembunyiin dulu dari awal */
+            display: none; 
         }
         
         .error-text { 
@@ -348,7 +367,6 @@ if (isset($_POST['aksi_foto'])) {
     </style>
 
     <style>
-        /* Paksa background langsung muncul pakai PHP, gak nunggu JS */
         <?php if(!empty($user_wallpaper)): ?>
         body::before {
             background-image: url('<?php echo htmlspecialchars($user_wallpaper); ?>') !important;
@@ -356,12 +374,9 @@ if (isset($_POST['aksi_foto'])) {
         <?php endif; ?>
     </style>
     <script>
-        // Tarik warna dari memori browser sebelum halaman digambar
         const currentWp = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
         const savedWp = localStorage.getItem('evision_wp_final');
         const savedColor = localStorage.getItem('evision_color_final');
-        
-        // Kalau wallpaper sama dengan yang ada di memori, tembak warnanya langsung!
         if(currentWp && currentWp === savedWp && savedColor) {
             document.documentElement.style.setProperty('--theme-primary', savedColor);
         }
@@ -417,7 +432,7 @@ if (isset($_POST['aksi_foto'])) {
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h6 class="fw-bold m-0 text-success">Informasi Identitas</h6>
                         <button class="btn btn-light btn-sm text-success fw-bold border shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPw" style="border-radius: 8px;">
-                            <i class="bi bi-key me-1"></i> Ganti Password
+                            <i class="bi bi-pencil-square me-1"></i> Edit Data & Profil
                         </button>
                     </div>
                     
@@ -431,8 +446,12 @@ if (isset($_POST['aksi_foto'])) {
                             <div class="info-value"><?php echo htmlspecialchars($user['nomor_induk']); ?></div>
                         </div>
                         <div class="col-md-6">
+                            <div class="info-label">Email</div>
+                            <div class="info-value text-lowercase"><?php echo htmlspecialchars($user['email'] ?? 'belum_diatur@evision.com'); ?></div>
+                        </div>
+                        <div class="col-md-6">
                             <div class="info-label">Role Akses</div>
-                            <div class="info-value"><?php echo ucwords($user['role']); ?></div>
+                            <div class="info-value"><?php echo strtoupper($user['role']); ?></div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-label">Terdaftar Sejak</div>
@@ -445,33 +464,47 @@ if (isset($_POST['aksi_foto'])) {
     </div>
 
     <div class="modal fade" id="modalPw" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
             <div class="modal-content shadow-lg border-0" style="border-radius: 16px;">
                 <div class="modal-header border-0 pb-0 mt-2 mx-2">
-                    <h6 class="fw-bold m-0 text-success"><i class="bi bi-shield-lock-fill me-2"></i>Keamanan Akun</h6>
+                    <h6 class="fw-bold m-0 text-success"><i class="bi bi-person-gear me-2"></i>Edit Identitas & Keamanan</h6>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formGantiPw" onsubmit="gantiPasswordAjax(event)">
                     <div class="modal-body p-4 pb-2">
+                        
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Password Lama</label>
-                            <div class="input-group shadow-sm" style="border-radius: 8px; overflow:hidden;">
-                                <input type="password" id="n0" name="pw_lama" class="form-control border-end-0" minlength="6" placeholder="Ketik password saat ini" required>
-                                <span class="input-group-text bg-white border-start-0" onclick="v('n0','i0')" style="cursor:pointer"><i class="bi bi-eye-slash text-muted" id="i0"></i></span>
-                            </div>
+                            <label class="form-label small fw-bold">Nama Lengkap</label>
+                            <input type="text" name="nama_lengkap" class="form-control" value="<?php echo htmlspecialchars($user['nama_lengkap']); ?>" required style="background: #ffffff; border: 1px solid #cbd5e1; font-weight: 600;">
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Password Baru</label>
+                            <label class="form-label small fw-bold">Alamat Email</label>
+                            <input type="email" name="email" class="form-control text-lowercase" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>" placeholder="Masukkan email aktif" required style="background: #ffffff; border: 1px solid #cbd5e1; font-weight: 600;">
+                        </div>
+
+                        <hr class="opacity-25 my-3">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Password Baru (Opsional)</label>
                             <div class="input-group shadow-sm" style="border-radius: 8px; overflow:hidden;">
-                                <input type="password" id="n1" name="pw_baru" class="form-control border-end-0" minlength="6" placeholder="Minimal 6 karakter" required>
+                                <input type="password" id="n1" name="pw_baru" class="form-control border-end-0" minlength="6" placeholder="Kosongkan jika hanya ingin edit nama/email">
                                 <span class="input-group-text bg-white border-start-0" onclick="v('n1','i1')" style="cursor:pointer"><i class="bi bi-eye-slash text-muted" id="i1"></i></span>
                             </div>
                         </div>
-                        <div class="mb-2">
-                            <label class="form-label small fw-bold">Konfirmasi Baru</label>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Konfirmasi Password Baru</label>
                             <div class="input-group shadow-sm" style="border-radius: 8px; overflow:hidden;">
-                                <input type="password" id="n2" name="konfirmasi_pw" class="form-control border-end-0" minlength="6" placeholder="Ulangi Password" required>
+                                <input type="password" id="n2" name="konfirmasi_pw" class="form-control border-end-0" minlength="6" placeholder="Ulangi password baru">
                                 <span class="input-group-text bg-white border-start-0" onclick="v('n2','i2')" style="cursor:pointer"><i class="bi bi-eye-slash text-muted" id="i2"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 bg-light p-2 rounded border" style="border-style: dashed !important;">
+                            <label class="form-label small fw-bold text-danger mb-1"><i class="bi bi-lock-fill"></i> Validasi Password Saat Ini (Wajib)</label>
+                            <div class="input-group shadow-sm" style="border-radius: 8px; overflow:hidden;">
+                                <input type="password" id="n0" name="pw_lama" class="form-control border-end-0" minlength="6" placeholder="Ketik password Anda saat ini" required>
+                                <span class="input-group-text bg-white border-start-0" onclick="v('n0','i0')" style="cursor:pointer"><i class="bi bi-eye-slash text-muted" id="i0"></i></span>
                             </div>
                         </div>
                         
@@ -479,7 +512,7 @@ if (isset($_POST['aksi_foto'])) {
                     </div>
                     <div class="modal-footer border-0 p-4 pt-0">
                         <button type="button" class="btn btn-light fw-bold w-100 mb-2" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
-                        <button type="submit" id="btn-simpan-pw" class="btn btn-success w-100 py-2 fw-bold shadow-sm" style="border-radius:8px">Simpan Password</button>
+                        <button type="submit" id="btn-simpan-pw" class="btn btn-success w-100 py-2 fw-bold shadow-sm" style="border-radius:8px">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -522,7 +555,6 @@ if (isset($_POST['aksi_foto'])) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script>
-        // --- LOGIKA TEMA PINTAR (Logo & Ikon otomatis gelap kalau wallpaper terang) ---
         const wallpaperPath = "<?php echo htmlspecialchars($user_wallpaper ?? ''); ?>";
 
         if (wallpaperPath) {
@@ -551,7 +583,6 @@ if (isset($_POST['aksi_foto'])) {
             }
         }
 
-        // Lihat / Sembunyi Password
         function v(id, icon) {
             const x = document.getElementById(id);
             const y = document.getElementById(icon);
@@ -559,22 +590,18 @@ if (isset($_POST['aksi_foto'])) {
             y.classList.toggle('bi-eye'); y.classList.toggle('bi-eye-slash');
         }
 
-        // =======================================================
-        // 💡 JAVASCRIPT BARU: AJAX GANTI PASSWORD (BIAR BISA SHAKE)
-        // =======================================================
         function gantiPasswordAjax(event) {
-            event.preventDefault(); // Tahan biar halaman gak refresh
+            event.preventDefault(); 
             
             let form = document.getElementById('formGantiPw');
             let formData = new FormData(form);
-            formData.append('update_password_ajax', 'true'); // Lempar kode unik ke PHP atas
+            formData.append('update_password_ajax', 'true');
 
             let btn = document.getElementById('btn-simpan-pw');
             let originalText = btn.innerHTML;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Loading...`;
             btn.disabled = true;
 
-            // Tembak data ke file ini sendiri
             fetch('profil.php', {
                 method: 'POST',
                 body: formData
@@ -585,16 +612,16 @@ if (isset($_POST['aksi_foto'])) {
                 btn.disabled = false;
                 
                 if (data.status === 'success') {
-                    // Kalo sukses, tutup modal & munculin notif ijo
                     bootstrap.Modal.getInstance(document.getElementById('modalPw')).hide();
                     form.reset();
                     document.getElementById('error-pw-container').style.display = 'none';
-                    Swal.fire({ icon: 'success', title: 'Berhasil', text: data.pesan, showConfirmButton: false, timer: 1500 });
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: data.pesan, showConfirmButton: false, timer: 1500 })
+                    .then(() => window.location.reload()); // Reload agar nama dan email ter-update live di layar
                 } else {
-                    // 💡 KALO GAGAL: JURUS SHAKE MODAL!
                     let modalContent = document.querySelector('#modalPw .modal-content');
-                    modalContent.classList.remove('shake-modal'); // Reset animasi kalau di-klik berkali-kali
-                    void modalContent.offsetWidth; // Trik trigger ulang animasi
+                    modalContent.classList.remove('shake-modal'); 
+                    void modalContent.offsetWidth; 
+                    navigator.vibrate ? navigator.vibrate(100) : null;
                     modalContent.classList.add('shake-modal');
                     
                     let errContainer = document.getElementById('error-pw-container');
@@ -609,7 +636,6 @@ if (isset($_POST['aksi_foto'])) {
             });
         }
 
-        // Preview Foto & Ilangin Error Kalau Ganti File
         document.getElementById('input-foto').addEventListener('change', function(){
             const errorMsg = document.getElementById('error-foto-size');
             errorMsg.style.display = 'none';
@@ -626,7 +652,6 @@ if (isset($_POST['aksi_foto'])) {
             }
         });
 
-        // VALIDASI EFEK SHAKE PAS TOMBOL SIMPAN FOTO DIKLIK
         document.getElementById('formFoto').addEventListener('submit', function(e) {
             const fileInput = document.getElementById('input-foto');
             const errorMsg = document.getElementById('error-foto-size');
@@ -634,7 +659,7 @@ if (isset($_POST['aksi_foto'])) {
             const file = fileInput.files[0];
 
             if (aksi === 'upload' && file) {
-                if (file.size > 2097152) { // 2097152 bytes = 2MB
+                if (file.size > 2097152) { 
                     e.preventDefault(); 
                     
                     errorMsg.style.display = 'block'; 
@@ -646,26 +671,10 @@ if (isset($_POST['aksi_foto'])) {
             }
         });
 
-        <?php if($success_msg): ?> 
-            Swal.fire({ icon: 'success', title: 'Berhasil', text: '<?php echo $success_msg; ?>', confirmButtonColor: 'var(--theme-primary)' }); 
-        <?php endif; ?>
-        <?php if($error_msg): ?> 
-            Swal.fire({ icon: 'error', title: 'Gagal', text: '<?php echo $error_msg; ?>', confirmButtonColor: '#ef4444' }); 
-        <?php endif; ?>
-        // =======================================================
-        // 💡 JAVASCRIPT BARU: CLEANER OTOMATIS PAS MODAL DITUTUP
-        // =======================================================
         document.getElementById('modalPw').addEventListener('hidden.bs.modal', function () {
-            // 1. Cabut efek kotak merah (shake)
             document.querySelector('#modalPw .modal-content').classList.remove('shake-modal');
-            
-            // 2. Sembunyiin pesan error-nya
             document.getElementById('error-pw-container').style.display = 'none';
-            
-            // 3. Kosongin isi ketikan form-nya
             document.getElementById('formGantiPw').reset();
-            
-            // 4. Balikin tipe input ke 'password' dan reset ikon mata ke kondisi awal
             ['n0', 'n1', 'n2'].forEach(id => document.getElementById(id).type = 'password');
             ['i0', 'i1', 'i2'].forEach(id => {
                 let icon = document.getElementById(id);
