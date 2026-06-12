@@ -21,15 +21,26 @@ date_default_timezone_set('Asia/Jakarta');
             --text-muted: #64748b;
         }
 
+        /* 💡 FIX AGAK TURUN KE BAWAH & GLOBAL SCROLL:
+           Padding atas dinaikin jdi 40px biar gak mepet bezel, overflow-x diaktifin biar bisa digeser mulus */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-light); 
-            padding: 20px; 
+            padding: 40px 20px 20px 20px; 
             margin: 0; 
             min-height: 100vh;
+            overflow-x: auto !important; 
+            -webkit-overflow-scrolling: touch;
         }
 
-        .display-container { max-width: 1200px; margin: auto; }
+        /* 💡 FIX GESER SEREMPAK KESAMPING:
+           Kita kunci lebar minimum container di 1150px. Kelakuan ini memaksa semua logo, 
+           cuaca, jam, dan tabel di HP tetep kokoh berjejer kesamping dan ke-geser barengan! */
+        .display-container { 
+            max-width: 1200px; 
+            min-width: 1150px; 
+            margin: auto; 
+        }
 
         .header-section {
             display: flex;
@@ -149,56 +160,6 @@ date_default_timezone_set('Asia/Jakarta');
             flex-direction: column;
             align-items: flex-end; 
             justify-content: space-between; /* JAM KEDORONG MENTOK BAWAH SEJAJAR KIRI */
-        }
-
-        /* =================================================================
-           🔥 SEKSI RESPONSIVE ANTI-MELOROT (100% MODERASI GESER SAMPING) 🔥
-           ================================================================= */
-        @media (max-width: 992px) {
-            /* Paksa Header tetap berjejer kesamping dan aktifkan geser horizontal jika mentok */
-            .header-section {
-                overflow-x: auto;
-                white-space: nowrap;
-                display: flex !important;
-                flex-direction: row !important;
-                justify-content: space-between;
-                align-items: center;
-                gap: 30px;
-                padding-bottom: 20px;
-                -webkit-overflow-scrolling: touch;
-            }
-            .brand-box, .right-box {
-                flex-shrink: 0; /* Cegah elemen mengkerut gepeng */
-            }
-            /* Hilangkan scrollbar kaku bawaan browser agar tetap estetik bersih */
-            .header-section::-webkit-scrollbar {
-                height: 0px !important;
-                display: none !important;
-            }
-            .header-section {
-                scrollbar-width: none !important;
-                -ms-overflow-style: none !important;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-            /* 🔥 SAKLEK KUNCI: Bungkus area tabel agar bisa digeser kanan-kiri ala dashboard */
-            #data-meeting {
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
-                width: 100%;
-            }
-            #data-meeting table {
-                min-width: 700px; /* Paksa lebar minimum tabel biar teksnya berjejer gak patah ke bawah */
-            }
-            .clock-box {
-                font-size: 28px;
-                padding: 10px 18px;
-                min-width: 160px;
-            }
         }
     </style>
 </head>
