@@ -97,6 +97,12 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .btn-primary, .btn-info, .status-badge.bg-berlangsung { background-color: var(--theme-primary) !important; border: none !important; color: white !important; }
         .text-success { color: var(--theme-primary) !important; }
         .form-control, .form-select { font-size: 14px; border-radius: 10px; background-color: #f8fafc; padding: 10px; }
+        @media (max-width: 992px) {
+            .btn-lihat-undangan-responsive {
+                display: inline-block !important;
+                margin-top: 5px;
+            }
+        }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
         .shake-modal { animation: shake 0.3s ease-in-out 0s 2; border: 2px solid #ef4444 !important; }
         .error-text { color: #ef4444; font-size: 11px; font-weight: 700; margin-top: 5px; display: block; }
@@ -175,6 +181,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
             <ul class="dropdown-menu dropdown-menu-end border-0 shadow mt-2" style="border-radius: 12px;">
                 <li><a class="dropdown-item py-2 fw-semibold" href="profil.php"><i class="bi bi-person me-2 text-muted"></i> Profil Saya</a></li>
                 <li><a class="dropdown-item py-2 fw-semibold" href="#" data-bs-toggle="modal" data-bs-target="#modalTema"><i class="bi bi-palette me-2 text-muted"></i> Ganti Tema</a></li>
+                <li><a class="dropdown-item py-2 fw-semibold" href="display.php"><i class="bi bi-tv me-2 text-muted"></i> Halaman Display</a></li>
                 <?php if ($my_role === 'IT'): ?>
                 <li><a class="dropdown-item py-2 fw-semibold" href="it_reset_rahasia.php"><i class="bi bi-shield-lock-fill me-2 text-muted"></i> Panel IT</a></li>                <?php endif; ?>
                 <li><hr class="dropdown-divider"></li>
@@ -363,6 +370,24 @@ $user_foto = $data_user['foto_profil'] ?? "";
   </div>
 </div>
 
+<div class="modal fade" id="modalUndangan" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+      <div class="modal-header bg-light border-bottom-0 py-3">
+        <h6 class="modal-title fw-bold text-success mb-0" id="modalUndanganTitle"><i class="bi bi-people-fill me-2"></i>Daftar Peserta Undangan</h6>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-3">
+        <ul class="list-group list-group-flush" id="listUndanganPeserta" style="max-height: 300px; overflow-y: auto;">
+            </ul>
+      </div>
+      <div class="modal-footer border-top-0 pt-1">
+        <button type="button" class="btn btn-success fw-bold btn-sm px-4 shadow-sm" data-bs-dismiss="modal" style="border-radius: 8px;">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div> 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
@@ -500,6 +525,7 @@ function loadTabelUser() {
                     btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai sebagai selesai.', '#10b981', 'Selesai')" style="background:none; border:none; color:#10b981; padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
                 }
 
+                // 🔥 AMAN: MEMASUKKAN TOMBOL LIHAT DAFTAR UNDANGAN DI KOLOM TENGAH (TANGGAL & WAKTU) 🔥
                 htmlTabel += `
                     <tr ${rowStyle}>
                         <td>
@@ -508,7 +534,10 @@ function loadTabelUser() {
                         </td>
                         <td>
                             <div class="fw-bold" style="font-size:16px; color: #000000; line-height:1.2;">${row.tanggal_indo}</div>
-                            <div class="text-muted" style="font-size: 12px;"><i class="bi bi-clock me-1"></i>${row.jam_format} WIB</div>
+                            <div class="text-muted mb-1" style="font-size: 12px;"><i class="bi bi-clock me-1"></i>${row.jam_format} WIB</div>
+                            <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 btn-lihat-undangan-responsive" style="font-size: 11px; border-radius: 8px; font-weight: 600;" onclick="event.preventDefault(); tampilkanUndangan('${safeTitle}', '${encodeURIComponent(row.peserta || '')}')">
+                                <i class="bi bi-people-fill me-1"></i> Lihat Daftar Undangan
+                            </button>
                         </td>
                         <td style="text-align: center; vertical-align: middle;">${statusBadge}${progressBar}</td>
                         <td style="text-align: center; vertical-align: middle;">${btnAksi}</td>
@@ -524,6 +553,49 @@ function loadTabelUser() {
 
 setInterval(loadTabelUser, 5000); 
 loadTabelUser(); 
+
+// 🔥 AMAN: FUNGSI INTERAKTIF BARU UNTUK MERENDER DAN MEMBUKA POPUP NAMA UNDANGAN 🔥
+function tampilkanUndangan(title, dataPesertaEncoded) {
+    document.getElementById('modalUndanganTitle').innerHTML = `<i class="bi bi-people-fill me-2"></i>Undangan: ${title}`;
+    let listContainer = document.getElementById('listUndanganPeserta');
+    listContainer.innerHTML = '';
+    
+    if (dataPesertaEncoded) {
+        try {
+            let decodedData = decodeURIComponent(dataPesertaEncoded);
+            let arrPeserta = JSON.parse(decodedData);
+            if (!Array.isArray(arrPeserta)) { arrPeserta = decodedData.split(','); }
+            
+            if(arrPeserta.length === 0 || (arrPeserta.length === 1 && arrPeserta[0].trim() === '')) {
+                listContainer.innerHTML = '<li class="list-group-item text-center text-muted small py-3">Tidak ada peserta khusus yang diundang.</li>';
+            } else {
+                arrPeserta.forEach(function(item) {
+                    let namaBersih = String(item).trim();
+                    if(namaBersih) {
+                        listContainer.innerHTML += `<li class="list-group-item d-flex align-items-center py-2 fw-semibold" style="font-size: 13px; color: #334155;"><i class="bi bi-person-check-fill text-success me-2 fs-5"></i> ${namaBersih}</li>`;
+                    }
+                });
+            }
+        } catch (e) {
+            let arrPeserta = decodeURIComponent(dataPesertaEncoded).split(',');
+            if(arrPeserta.length === 0 || (arrPeserta.length === 1 && arrPeserta[0].trim() === '')) {
+                listContainer.innerHTML = '<li class="list-group-item text-center text-muted small py-3">Tidak ada peserta khusus yang diundang.</li>';
+            } else {
+                arrPeserta.forEach(function(item) {
+                    let namaBersih = String(item).trim();
+                    if(namaBersih) {
+                        listContainer.innerHTML += `<li class="list-group-item d-flex align-items-center py-2 fw-semibold" style="font-size: 13px; color: #334155;"><i class="bi bi-person-check-fill text-success me-2 fs-5"></i> ${namaBersih}</li>`;
+                    }
+                });
+            }
+        }
+    } else {
+        listContainer.innerHTML = '<li class="list-group-item text-center text-muted small py-3">Tidak ada peserta khusus yang diundang.</li>';
+    }
+    
+    var myModalUndangan = new bootstrap.Modal(document.getElementById('modalUndangan'));
+    myModalUndangan.show();
+}
 
 function bukaModalTambah() {
     document.getElementById('error-tambah').style.display = 'none';
@@ -610,7 +682,7 @@ function simpanData(event, tipeAksi) {
             Swal.fire({ icon: 'success', title: data.pesan, showConfirmButton: false, timer: 1500 });
             loadTabelUser(); 
         } else {
-            let contentDiv = document.getElementById(contentDiv);
+            let contentDiv = document.getElementById(idContent);
             contentDiv.classList.add('shake-modal');
             setTimeout(() => contentDiv.classList.remove('shake-modal'), 1000);
             
