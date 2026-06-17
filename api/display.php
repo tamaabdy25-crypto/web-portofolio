@@ -51,13 +51,14 @@ date_default_timezone_set('Asia/Jakarta');
             border-bottom: 2px solid #e2e8f0;
         }
 
-        /* --- CSS LOGO KIRI (WARNA DIUBAH PAKE CSS) --- */
+        /* --- CSS LOGO KIRI (WARNA DIUBAH PAKE CSS + FITUR RAHASIA POINTER) --- */
         .logo-split-container { 
             height: 45px; 
             display: flex;
             align-items: center;
             margin-bottom: 12px;
             filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.15)); 
+            cursor: pointer; /* SUNTIKAN RAHASIA: Kursor berubah jari pas di-hover khusus untuk operator */
         }
         
         .logo-split-container img {
@@ -169,7 +170,8 @@ date_default_timezone_set('Asia/Jakarta');
     <div class="header-section">
         
         <div class="brand-box">
-            <div class="logo-split-container">
+            <!-- 🔥 SUNTIKAN RAHASIA UTAMA: Ditambahkan event onclick untuk redirect balik ke dashboard -->
+            <div class="logo-split-container" onclick="window.location.href='input.php'">
                 <img src="logo_e.png" alt="E-" class="logo-part-e">
                 <img src="logo_vision.png" alt="VISION" class="logo-part-vision">
             </div>
