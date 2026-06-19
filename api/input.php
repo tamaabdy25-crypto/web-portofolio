@@ -111,9 +111,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .btn-arsip-kustom:hover { background-color: var(--theme-primary) !important; color: white !important; }
         .btn-arsip-kustom:hover i { color: white !important; }
         
-        /* =======================================================
-           🔥 FIX SELECT2: LOGIKA CLEANING WRAPPER BIAR ANTI-LEAK PAS DI-BACKSPACE
-           ======================================================= */
+        /* 🔥 FIX DATA BOCOR SELECT2: Set tatanan flex-wrap murni biar chip tertata rapi */
         .select2-container--default .select2-selection--multiple { background-color: #f8fafc; border: 1px solid #dee2e6; border-radius: 10px; min-height: 44px; padding: 4px 8px; }
         .select2-container--default.select2-container--focus .select2-selection--multiple { border-color: var(--theme-primary); box-shadow: none !important; }
         .select2-container--default .select2-selection--multiple .select2-selection__rendered { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; padding: 0 !important; margin: 0 !important; list-style: none !important; }
@@ -126,10 +124,14 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .select2-results__option--highlighted[aria-selected] .text-muted-custom { color: rgba(255,255,255,0.8) !important; }
         .select2-results__option--highlighted[aria-selected] .icon-custom-bg { background: rgba(255,255,255,0.2) !important; color: #ffffff !important; }
         
-        /* SINKRONISASI PILIHAN WARNA SELECT2 MENGIKUTI TEMA WALLPAPER */
+        /* ANTI IJO SAKLEK: Mengikuti warna dinamis var(--theme-primary) */
         .select2-container--default .select2-selection--multiple .select2-selection__choice { background-color: color-mix(in srgb, var(--theme-primary) 12%, transparent) !important; color: var(--theme-primary) !important; border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important; border-radius: 6px; padding: 4px 8px; font-weight: 700; font-size: 12px; margin: 0 !important; display: flex !important; align-items: center !important; }
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: var(--theme-primary) !important; border-right: none; margin-right: 6px; font-weight: bold; }
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover { background: transparent; color: #ef4444 !important; }
+
+        /* 🔥 FIX 4: Pastikan warna hover & outline tombol tabel mengikuti tema secara global */
+        .btn-lihat-undangan-responsive { color: var(--theme-primary) !important; transition: all 0.2s ease-in-out; }
+        .btn-lihat-undangan-responsive:hover { background-color: var(--theme-primary) !important; color: #ffffff !important; }
 
         .modal-content .btn-success { background-color: var(--theme-primary) !important; border-color: var(--theme-primary) !important; color: #ffffff !important; transition: all 0.3s ease !important; }
         .modal-content .btn-success:hover { opacity: 0.85 !important; transform: translateY(-1px) !important; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; }
@@ -544,13 +546,13 @@ function loadTabelUser() {
                     `;
                 } else {
                     rowStyle = `style="background: rgba(16, 185, 129, 0.03);"`;
-                    // 🔥 FIX 1: Ganti warna hijau statis berlangsung ke warna dinamis tema lu!
+                    // 🔥 FIX 1: Sinkronisasi warna status berlangsung & bar mengikuti variabel tema wallpaper global
                     statusBadge = `<span class="status-badge" style="background: color-mix(in srgb, var(--theme-primary) 15%, transparent); color: var(--theme-primary); font-size:10px; padding:4px 10px; border-radius:10px; font-weight:700;">BERLANGSUNG</span>`;
                     progressBar = `<div style="height: 4px; width: 60px; background: #e2e8f0; border-radius: 10px; margin: 5px auto 0; overflow: hidden;"><div style="height: 100%; width: ${row.persen_jalan}%; background: var(--theme-primary);"></div></div>`;
                     btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai sebagai selesai.', 'var(--theme-primary)', 'Selesai')" style="background:none; border:none; color: var(--theme-primary); padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
                 }
 
-                // 🔥 FIX 2: Ganti class text-success bawaan bootstrap ke style var(--theme-primary) biar ikutan berubah dinamis
+                // 🔥 FIX 2: Cabut total class bootstrap 'btn-outline-success' ijo bawaan asli, ganti pake selector dinamis var tema!
                 htmlTabel += `
                     <tr ${rowStyle}>
                         <td>
@@ -563,7 +565,7 @@ function loadTabelUser() {
                         </td>
                         <td>
                             <div style="max-width: 165px;">
-                                <button type="button" class="btn btn-sm btn-outline-success py-1 px-2 btn-lihat-undangan-responsive w-100 text-start d-flex align-items-center justify-content-between" style="font-size: 11px; border-radius: 8px; font-weight: 600; border-color: color-mix(in srgb, var(--theme-primary) 25%, transparent); background: color-mix(in srgb, var(--theme-primary) 2%, transparent);" onclick="event.preventDefault(); tampilkanUndangan('${safeTitle}', '${encodeURIComponent(row.peserta || '')}')">
+                                <button type="button" class="btn btn-sm btn-lihat-undangan-responsive w-100 text-start d-flex align-items-center justify-content-between" style="font-size: 11px; border-radius: 8px; font-weight: 600; border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent); background: color-mix(in srgb, var(--theme-primary) 2%, transparent);" onclick="event.preventDefault(); tampilkanUndangan('${safeTitle}', '${encodeURIComponent(row.peserta || '')}')">
                                     <span><i class="bi bi-people-fill me-1"></i> Lihat Daftar Undangan</span>
                                     <i class="bi bi-chevron-right small opacity-50"></i>
                                 </button>
@@ -692,7 +694,6 @@ function simpanData(event, tipeAksi) {
     let formData = new FormData(form);
     formData.append('action', tipeAksi);
 
-    // 🔥 FIX UTAMA SAKLEK: Jika tipe aksi adalah 'tambah', suntik nama pembuat secara otomatis ke list 'peserta[]'
     if (tipeAksi === 'tambah') {
         let pembuatAgenda = "<?php echo pg_escape_string($conn, $nama_lengkap); ?>";
         formData.append('peserta[]', pembuatAgenda);
@@ -855,7 +856,7 @@ $(document).ready(function() {
                 let idSekarang = $(this).attr('id');
                 let indexSekarang = urutanId.indexOf(idSekarang);
                 
-                if (indexSekarang > -1 && indexSekarang < urutanId.length - 1) {
+                if (indexSekarang > -1 && indexSegala < urutanId.length - 1) {
                     let idBerikutnya = urutanId[indexSekarang + 1];
                     let elemenBerikutnya = $('#' + idBerikutnya);
                     
@@ -878,11 +879,55 @@ $(document).ready(function() {
     let urutanEdit = ['edit_title', 'edit_peserta', 'edit_room', 'edit_date', 'edit_start', 'edit_end'];
     aktifkanEnterPindah('formEdit', urutanEdit);
 
-    $('#pilih_peserta').on('select2:close', function (e) {
-        setTimeout(function() { $('#tambah_room').focus(); }, 50);
-    });
-    $('#edit_peserta').on('select2:close', function (e) {
-        setTimeout(function() { $('#edit_room').focus(); }, 50);
+    /* =================================================================
+       🔥 FIERCE UPDATE: INTERSEPTOR KUNCI JALUR INTERAKSI KEYBOARD SELECT2 🔥
+       ================================================================= */
+    
+    // 💡 FIX 1: Hadang total kebocoran teks mentah pas backspace chip select2 multiple
+    $(document).on('keydown', '.select2-search__field', function(e) {
+        if (e.keyCode === 8 && $(this).val() === '') { // 8 = Backspace
+            let selectElement = $(this).closest('.select2-container').prev('select');
+            if (selectElement.length && selectElement.prop('multiple')) {
+                let currentValues = selectElement.val();
+                if (currentValues && currentValues.length) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    currentValues.pop(); // Hapus item terakhir dengan bersih layaknya klik 'X'
+                    selectElement.val(currentValues).trigger('change');
+                    
+                    // Supaya dropdown tetep sinkron & rapi kondisinya
+                    let containerOpen = $(this).closest('.select2-container').hasClass('select2-container--open');
+                    if (containerOpen) {
+                        selectElement.select2('close').select2('open');
+                    }
+                }
+            }
+        }
+        
+        // 💡 FIX 2 & 3: Hanya ijinkan pindah kolom ke Ruangan jika user menekan ENTER saat keadaan dropdown tertutup!
+        if (e.keyCode === 13) { // 13 = Enter
+            let container = $(this).closest('.select2-container');
+            let isDropdownOpen = container.hasClass('select2-container--open');
+            let selectElement = container.prev('select');
+            
+            if (!isDropdownOpen && $(this).val() === '') {
+                e.preventDefault();
+                let formId = selectElement.closest('form').attr('id');
+                let targetUrutan = formId === 'formTambah' ? urutanTambah : urutanEdit;
+                let idSekarang = selectElement.attr('id');
+                let indexSekarang = targetUrutan.indexOf(idSekarang);
+                
+                if (indexSekarang > -1 && indexSekarang < targetUrutan.length - 1) {
+                    let idBerikutnya = targetUrutan[indexSekarang + 1];
+                    let elemenBerikutnya = $('#' + idBerikutnya);
+                    if (elemenBerikutnya.hasClass('select2-hidden-accessible')) {
+                        elemenBerikutnya.select2('open');
+                    } else {
+                        elemenBerikutnya.focus();
+                    }
+                }
+            }
+        }
     });
 });
 
@@ -898,7 +943,7 @@ if (formTema && inputWallpaper) {
         const file = inputWallpaper.files[0];
 
         if (file) {
-            if (file.size > 4718592) { 
+            if (file.size > 4404019) { 
                 e.preventDefault(); 
                 e.stopImmediatePropagation(); 
                 
