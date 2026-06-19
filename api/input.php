@@ -56,7 +56,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scalable=no, user-scalable=no">
-    <meta http-equiv="Cache-Control: no-cache, no-store, must-revalidate">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>E-VISION - Dashboard</title>
@@ -111,12 +111,12 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .btn-arsip-kustom:hover { background-color: var(--theme-primary) !important; color: white !important; }
         .btn-arsip-kustom:hover i { color: white !important; }
         
-        /* 🔥 FIX DATA BOCOR SELECT2: Set tatanan flex-wrap murni biar chip tertata rapi */
-        .select2-container--default .select2-selection--multiple { background-color: #f8fafc; border: 1px solid #dee2e6; border-radius: 10px; min-height: 44px; padding: 4px 8px; }
+        /* 🔥 UPGRADE CSS SELECT2 MULTIPLE: Paksa kursor selalu berada di samping (horizontal/kesamping) tag */
+        .select2-container--default .select2-selection--multiple { background-color: #f8fafc; border: 1px solid #dee2e6; border-radius: 10px; min-height: 44px; padding: 4px 8px; display: block !important; }
         .select2-container--default.select2-container--focus .select2-selection--multiple { border-color: var(--theme-primary); box-shadow: none !important; }
-        .select2-container--default .select2-selection--multiple .select2-selection__rendered { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; padding: 0 !important; margin: 0 !important; list-style: none !important; }
-        .select2-container--default .select2-selection--multiple .select2-search.select2-search--inline { display: inline-block !important; margin: 0 !important; flex-grow: 1 !important; }
-        .select2-container--default .select2-selection--multiple .select2-search.select2-search--inline .select2-search__field { height: 30px !important; line-height: 28px !important; margin: 0 !important; font-family: 'Inter', sans-serif; padding: 0 4px !important; width: 100% !important; box-shadow: none !important; }
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered { display: block !important; padding: 0 !important; margin: 0 !important; list-style: none !important; }
+        .select2-container--default .select2-selection--multiple .select2-search.select2-search--inline { display: inline-block !important; float: left !important; margin: 0 !important; padding: 0 !important; }
+        .select2-container--default .select2-selection--multiple .select2-search.select2-search--inline .select2-search__field { height: 32px !important; line-height: 30px !important; margin: 2px 0 !important; font-family: 'Inter', sans-serif; padding: 0 6px !important; background: transparent !important; border: none !important; box-shadow: none !important; display: inline-block !important; }
         .select2-dropdown { border: 1px solid #dee2e6; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; z-index: 9999; }
         .select2-results__option { padding: 8px 12px; border-bottom: 1px solid #f8f9fa; }
         .select2-results__option--highlighted[aria-selected] { background-color: var(--theme-primary) !important; color: white !important; }
@@ -124,14 +124,14 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .select2-results__option--highlighted[aria-selected] .text-muted-custom { color: rgba(255,255,255,0.8) !important; }
         .select2-results__option--highlighted[aria-selected] .icon-custom-bg { background: rgba(255,255,255,0.2) !important; color: #ffffff !important; }
         
-        /* ANTI IJO SAKLEK: Mengikuti warna dinamis var(--theme-primary) */
-        .select2-container--default .select2-selection--multiple .select2-selection__choice { background-color: color-mix(in srgb, var(--theme-primary) 12%, transparent) !important; color: var(--theme-primary) !important; border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important; border-radius: 6px; padding: 4px 8px; font-weight: 700; font-size: 12px; margin: 0 !important; display: flex !important; align-items: center !important; }
+        /* Desain tag chip mengikuti warna dinamis tema wallpaper */
+        .select2-container--default .select2-selection--multiple .select2-selection__choice { background-color: color-mix(in srgb, var(--theme-primary) 12%, transparent) !important; color: var(--theme-primary) !important; border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important; border-radius: 6px; padding: 4px 8px; font-weight: 700; font-size: 12px; margin: 2px 6px 2px 0 !important; display: inline-block !important; float: left !important; }
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: var(--theme-primary) !important; border-right: none; margin-right: 6px; font-weight: bold; }
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover { background: transparent; color: #ef4444 !important; }
 
-        /* 🔥 FIX 4: Pastikan warna hover & outline tombol tabel mengikuti tema secara global */
-        .btn-lihat-undangan-responsive { color: var(--theme-primary) !important; transition: all 0.2s ease-in-out; }
-        .btn-lihat-undangan-responsive:hover { background-color: var(--theme-primary) !important; color: #ffffff !important; }
+        /* 🔥 FIX ANTI-IJO: Tombol tabel dinamis mengikuti warna tema wallpaper */
+        .btn-lihat-undangan-responsive { color: var(--theme-primary) !important; border-color: color-mix(in srgb, var(--theme-primary) 25%, transparent) !important; background: color-mix(in srgb, var(--theme-primary) 2%, transparent) !important; transition: all 0.2s ease-in-out; }
+        .btn-lihat-undangan-responsive:hover { background-color: var(--theme-primary) !important; color: #ffffff !important; border-color: var(--theme-primary) !important; }
 
         .modal-content .btn-success { background-color: var(--theme-primary) !important; border-color: var(--theme-primary) !important; color: #ffffff !important; transition: all 0.3s ease !important; }
         .modal-content .btn-success:hover { opacity: 0.85 !important; transform: translateY(-1px) !important; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; }
@@ -546,13 +546,11 @@ function loadTabelUser() {
                     `;
                 } else {
                     rowStyle = `style="background: rgba(16, 185, 129, 0.03);"`;
-                    // 🔥 FIX 1: Sinkronisasi warna status berlangsung & bar mengikuti variabel tema wallpaper global
                     statusBadge = `<span class="status-badge" style="background: color-mix(in srgb, var(--theme-primary) 15%, transparent); color: var(--theme-primary); font-size:10px; padding:4px 10px; border-radius:10px; font-weight:700;">BERLANGSUNG</span>`;
                     progressBar = `<div style="height: 4px; width: 60px; background: #e2e8f0; border-radius: 10px; margin: 5px auto 0; overflow: hidden;"><div style="height: 100%; width: ${row.persen_jalan}%; background: var(--theme-primary);"></div></div>`;
                     btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai sebagai selesai.', 'var(--theme-primary)', 'Selesai')" style="background:none; border:none; color: var(--theme-primary); padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
                 }
 
-                // 🔥 FIX 2: Cabut total class bootstrap 'btn-outline-success' ijo bawaan asli, ganti pake selector dinamis var tema!
                 htmlTabel += `
                     <tr ${rowStyle}>
                         <td>
@@ -856,7 +854,7 @@ $(document).ready(function() {
                 let idSekarang = $(this).attr('id');
                 let indexSekarang = urutanId.indexOf(idSekarang);
                 
-                if (indexSekarang > -1 && indexSegala < urutanId.length - 1) {
+                if (indexSekarang > -1 && indexSekarang < urutanId.length - 1) {
                     let idBerikutnya = urutanId[indexSekarang + 1];
                     let elemenBerikutnya = $('#' + idBerikutnya);
                     
@@ -880,24 +878,35 @@ $(document).ready(function() {
     aktifkanEnterPindah('formEdit', urutanEdit);
 
     /* =================================================================
-       🔥 FIERCE UPDATE: INTERSEPTOR KUNCI JALUR INTERAKSI KEYBOARD SELECT2 🔥
+       🔥 FIERCE UPDATE PERBAIKAN TOTAL: INTERSEPTOR KUNCI JALUR EVENT SELECT2 🔥
        ================================================================= */
     
-    // 💡 FIX 1: Hadang total kebocoran teks mentah pas backspace chip select2 multiple
+    // 💡 FIX 1: Hapus total sisa teks mentah nama/email di field input pas pencet backspace
+    $('#pilih_peserta, #edit_peserta').on('select2:unselect', function (e) {
+        const searchField = $(this).next('.select2-container').find('.select2-search__field');
+        setTimeout(function() {
+            searchField.val('').trigger('input'); // Paksa kosong melompong total!
+        }, 10);
+    });
+
+    // Pasang interseptor level paling bawah (langsung pada input search field)
     $(document).on('keydown', '.select2-search__field', function(e) {
-        if (e.keyCode === 8 && $(this).val() === '') { // 8 = Backspace
-            let selectElement = $(this).closest('.select2-container').prev('select');
+        let container = $(this).closest('.select2-container');
+        let selectElement = container.prev('select');
+
+        // Jika user pencet Backspace dan kondisi kotak inputan kosong
+        if (e.keyCode === 8 && $(this).val() === '') {
             if (selectElement.length && selectElement.prop('multiple')) {
                 let currentValues = selectElement.val();
                 if (currentValues && currentValues.length) {
                     e.preventDefault();
                     e.stopPropagation();
-                    currentValues.pop(); // Hapus item terakhir dengan bersih layaknya klik 'X'
+                    currentValues.pop(); // Buang tag chip terakhir seperti layaknya klik tombol silang (X)
                     selectElement.val(currentValues).trigger('change');
+                    $(this).val('').trigger('input'); // Jaga kursor agar tetap aman bersih di samping!
                     
-                    // Supaya dropdown tetep sinkron & rapi kondisinya
-                    let containerOpen = $(this).closest('.select2-container').hasClass('select2-container--open');
-                    if (containerOpen) {
+                    // Supaya dropdown menu tetep sinkron
+                    if (container.hasClass('select2-container--open')) {
                         selectElement.select2('close').select2('open');
                     }
                 }
@@ -906,10 +915,14 @@ $(document).ready(function() {
         
         // 💡 FIX 2 & 3: Hanya ijinkan pindah kolom ke Ruangan jika user menekan ENTER saat keadaan dropdown tertutup!
         if (e.keyCode === 13) { // 13 = Enter
-            let container = $(this).closest('.select2-container');
             let isDropdownOpen = container.hasClass('select2-container--open');
-            let selectElement = container.prev('select');
             
+            // Kalo dropdown lagi kebuka milih orang, biarin Select2 milih tanpa nge-enter kolom bawah!
+            if (isDropdownOpen) {
+                return;
+            }
+            
+            // Kalo dropdown udah ketutup dan teks kosong, baru ijinkan pindah kolom kesamping!
             if (!isDropdownOpen && $(this).val() === '') {
                 e.preventDefault();
                 let formId = selectElement.closest('form').attr('id');
