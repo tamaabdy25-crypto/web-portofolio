@@ -231,7 +231,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
           <div class="modal-body pt-3">
               <img id="preview-theme" src="#" alt="Pratinjau Gambar">
              <p class="small text-muted mb-3">
-    <i class="bi bi-info-circle me-1"></i>Pilih foto HD untuk wallpaper. Jika terang, logo & ikon otomatis menjadi gelap.
+    <i class="bi bi-info-circle me-1"></i>Pilih foto untuk dijadikan wallpaper.
     <strong class="text-danger d-block mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Maksimal ukuran file: 4.2MB</strong>
 </p>
               <input type="file" name="wallpaper" id="input-wallpaper" class="form-control mb-2" accept="image/*">
