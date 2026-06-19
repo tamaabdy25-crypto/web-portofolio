@@ -56,7 +56,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scalable=no, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Cache-Control: no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>E-VISION - Dashboard</title>
@@ -111,18 +111,25 @@ $user_foto = $data_user['foto_profil'] ?? "";
         .btn-arsip-kustom:hover { background-color: var(--theme-primary) !important; color: white !important; }
         .btn-arsip-kustom:hover i { color: white !important; }
         
+        /* =======================================================
+           🔥 FIX SELECT2: LOGIKA CLEANING WRAPPER BIAR ANTI-LEAK PAS DI-BACKSPACE
+           ======================================================= */
         .select2-container--default .select2-selection--multiple { background-color: #f8fafc; border: 1px solid #dee2e6; border-radius: 10px; min-height: 44px; padding: 4px 8px; }
         .select2-container--default.select2-container--focus .select2-selection--multiple { border-color: var(--theme-primary); box-shadow: none !important; }
-        .select2-container--default .select2-selection--multiple .select2-search.select2-search--inline .select2-search__field { height: 30px !important; line-height: 28px !important; margin-top: 2px !important; font-family: 'Inter', sans-serif; padding-bottom: 0 !important; }
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; padding: 0 !important; margin: 0 !important; list-style: none !important; }
+        .select2-container--default .select2-selection--multiple .select2-search.select2-search--inline { display: inline-block !important; margin: 0 !important; flex-grow: 1 !important; }
+        .select2-container--default .select2-selection--multiple .select2-search.select2-search--inline .select2-search__field { height: 30px !important; line-height: 28px !important; margin: 0 !important; font-family: 'Inter', sans-serif; padding: 0 4px !important; width: 100% !important; box-shadow: none !important; }
         .select2-dropdown { border: 1px solid #dee2e6; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; z-index: 9999; }
         .select2-results__option { padding: 8px 12px; border-bottom: 1px solid #f8f9fa; }
         .select2-results__option--highlighted[aria-selected] { background-color: var(--theme-primary) !important; color: white !important; }
         .select2-results__option--highlighted[aria-selected] .text-dark-custom { color: #ffffff !important; }
         .select2-results__option--highlighted[aria-selected] .text-muted-custom { color: rgba(255,255,255,0.8) !important; }
         .select2-results__option--highlighted[aria-selected] .icon-custom-bg { background: rgba(255,255,255,0.2) !important; color: #ffffff !important; }
-        .select2-container--default .select2-selection--multiple .select2-selection__choice { background-color: rgba(16, 185, 129, 0.1); color: var(--theme-primary); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px; padding: 4px 8px; font-weight: 700; font-size: 12px; margin-top: 6px; }
-        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: var(--theme-primary); border-right: none; margin-right: 6px; font-weight: bold; }
-        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover { background: transparent; color: #ef4444; }
+        
+        /* SINKRONISASI PILIHAN WARNA SELECT2 MENGIKUTI TEMA WALLPAPER */
+        .select2-container--default .select2-selection--multiple .select2-selection__choice { background-color: color-mix(in srgb, var(--theme-primary) 12%, transparent) !important; color: var(--theme-primary) !important; border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent) !important; border-radius: 6px; padding: 4px 8px; font-weight: 700; font-size: 12px; margin: 0 !important; display: flex !important; align-items: center !important; }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: var(--theme-primary) !important; border-right: none; margin-right: 6px; font-weight: bold; }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover { background: transparent; color: #ef4444 !important; }
 
         .modal-content .btn-success { background-color: var(--theme-primary) !important; border-color: var(--theme-primary) !important; color: #ffffff !important; transition: all 0.3s ease !important; }
         .modal-content .btn-success:hover { opacity: 0.85 !important; transform: translateY(-1px) !important; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; }
@@ -277,7 +284,7 @@ $user_foto = $data_user['foto_profil'] ?? "";
                       <div class="input-group">
                           <span class="input-group-text bg-white border-end-0"><i class="bi bi-door-open text-muted"></i></span>
                           <select name="room_name" id="tambah_room" class="form-select border-start-0 ps-0 text-truncate" style="padding-right: 30px; text-overflow: ellipsis;" required>
-                              <option value=""" disabled selected>-- Pilih Ruangan --</option>
+                              <option value="" disabled selected>-- Pilih Ruangan --</option>
                               <option value="RUANG MEETING SYNERGY 7">RUANG MEETING SYNERGY 7</option>
                               <option value="RUANG MEETING EXCELENT">RUANG MEETING EXCELENT</option>
                               <option value="RUANG MEETING DEPAN HCGS">RUANG MEETING DEPAN HCGS</option>
@@ -436,8 +443,6 @@ function simpanTema(event) {
     event.preventDefault();
     
     let inputWpCheck = document.getElementById('input-wallpaper');
-    
-    // 🔥 FIX UTAMA SAKLEK: Ketika file diatas 4.2MB, buat notif teks merah dan getarkan modal agar tombol TIDAK TERASA MATI!
     if (inputWpCheck && inputWpCheck.files[0] && inputWpCheck.files[0].size > 4404019) {
         let btnSubmitTema = document.getElementById('btn-tema');
         let errorMsg = document.getElementById('error-tema-size');
@@ -457,7 +462,7 @@ function simpanTema(event) {
         void inputWpCheck.offsetWidth; 
         inputWpCheck.classList.add('shake-animation');
         
-        return false; // ⛔ HADANG TOTAL DI SINI!
+        return false; 
     }
 
     let form = document.getElementById('formTema');
@@ -539,16 +544,18 @@ function loadTabelUser() {
                     `;
                 } else {
                     rowStyle = `style="background: rgba(16, 185, 129, 0.03);"`;
-                    statusBadge = `<span class="status-badge" style="background:#dcfce7; color:#16a34a; font-size:10px; padding:4px 10px; border-radius:10px; font-weight:700;">BERLANGSUNG</span>`;
-                    progressBar = `<div style="height: 4px; width: 60px; background: #e2e8f0; border-radius: 10px; margin: 5px auto 0; overflow: hidden;"><div style="height: 100%; width: ${row.persen_jalan}%; background: #10b981;"></div></div>`;
-                    btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai sebagai selesai.', '#10b981', 'Selesai')" style="background:none; border:none; color:#10b981; padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
+                    // 🔥 FIX 1: Ganti warna hijau statis berlangsung ke warna dinamis tema lu!
+                    statusBadge = `<span class="status-badge" style="background: color-mix(in srgb, var(--theme-primary) 15%, transparent); color: var(--theme-primary); font-size:10px; padding:4px 10px; border-radius:10px; font-weight:700;">BERLANGSUNG</span>`;
+                    progressBar = `<div style="height: 4px; width: 60px; background: #e2e8f0; border-radius: 10px; margin: 5px auto 0; overflow: hidden;"><div style="height: 100%; width: ${row.persen_jalan}%; background: var(--theme-primary);"></div></div>`;
+                    btnAksi = `<button type="button" onclick="event.preventDefault(); aksiEksekusi('selesai', '${row.id}', 'Selesaikan Agenda?', 'Agenda ini akan ditandai sebagai selesai.', 'var(--theme-primary)', 'Selesai')" style="background:none; border:none; color: var(--theme-primary); padding:0;" title="Tandai Selesai"><i class="bi bi-check-circle-fill fs-4"></i></button>`;
                 }
 
+                // 🔥 FIX 2: Ganti class text-success bawaan bootstrap ke style var(--theme-primary) biar ikutan berubah dinamis
                 htmlTabel += `
                     <tr ${rowStyle}>
                         <td>
                             <span style="display:block; font-weight:700; color: #000000; font-size:18px;">${row.title}</span>
-                            <span class="badge bg-light text-success border" style="font-size: 10px; padding: 3px 6px;"><i class="bi bi-door-open me-1"></i>${row.room_name}</span>
+                            <span class="badge bg-light border" style="font-size: 10px; padding: 3px 6px; color: var(--theme-primary) !important;"><i class="bi bi-door-open me-1"></i>${row.room_name}</span>
                         </td>
                         <td>
                             <div class="fw-bold" style="font-size:16px; color: #000000; line-height:1.2;">${row.tanggal_indo}</div>
@@ -556,7 +563,7 @@ function loadTabelUser() {
                         </td>
                         <td>
                             <div style="max-width: 165px;">
-                                <button type="button" class="btn btn-sm btn-outline-success py-1 px-2 btn-lihat-undangan-responsive w-100 text-start d-flex align-items-center justify-content-between" style="font-size: 11px; border-radius: 8px; font-weight: 600; border-color: rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.02);" onclick="event.preventDefault(); tampilkanUndangan('${safeTitle}', '${encodeURIComponent(row.peserta || '')}')">
+                                <button type="button" class="btn btn-sm btn-outline-success py-1 px-2 btn-lihat-undangan-responsive w-100 text-start d-flex align-items-center justify-content-between" style="font-size: 11px; border-radius: 8px; font-weight: 600; border-color: color-mix(in srgb, var(--theme-primary) 25%, transparent); background: color-mix(in srgb, var(--theme-primary) 2%, transparent);" onclick="event.preventDefault(); tampilkanUndangan('${safeTitle}', '${encodeURIComponent(row.peserta || '')}')">
                                     <span><i class="bi bi-people-fill me-1"></i> Lihat Daftar Undangan</span>
                                     <i class="bi bi-chevron-right small opacity-50"></i>
                                 </button>
@@ -685,6 +692,12 @@ function simpanData(event, tipeAksi) {
     let formData = new FormData(form);
     formData.append('action', tipeAksi);
 
+    // 🔥 FIX UTAMA SAKLEK: Jika tipe aksi adalah 'tambah', suntik nama pembuat secara otomatis ke list 'peserta[]'
+    if (tipeAksi === 'tambah') {
+        let pembuatAgenda = "<?php echo pg_escape_string($conn, $nama_lengkap); ?>";
+        formData.append('peserta[]', pembuatAgenda);
+    }
+
     let btn = document.getElementById(idBtn);
     let originalText = btn.innerHTML;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Loading...`;
@@ -783,7 +796,7 @@ $(document).ready(function() {
 
         return $(`
             <div class='d-flex align-items-center'>
-                <div class='icon-custom-bg me-3 rounded-circle d-flex align-items-center justify-content-center' style='width:32px; height:32px; background: rgba(16,185,129,0.1); color:var(--theme-primary);'>
+                <div class='icon-custom-bg me-3 rounded-circle d-flex align-items-center justify-content-center' style='width:32px; height:32px; background: color-mix(in srgb, var(--theme-primary) 10%, transparent); color:var(--theme-primary);'>
                     <i class='bi bi-person-fill fs-5'></i>
                 </div>
                 <div>
@@ -885,9 +898,7 @@ if (formTema && inputWallpaper) {
         const file = inputWallpaper.files[0];
 
         if (file) {
-            // 🔥 Amankan batas ketat Vercel: 4.2MB = 4404019 Bytes
-            if (file.size > 4404019) { 
-                // HALANGI EKSEKUSI FORM SECARA TOTAL
+            if (file.size > 4718592) { 
                 e.preventDefault(); 
                 e.stopImmediatePropagation(); 
                 
